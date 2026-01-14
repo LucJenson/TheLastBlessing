@@ -698,50 +698,77 @@
         `Rooms: ${currentArea.rooms}\n` +
         `Monster Tier: ${currentArea.monsterTier}\n` +
         `Loot Tier: ${currentArea.lootTier}\n`;
-    }
-  }
-}
+        }
+      }
+   }
+   
+   function hookTownButtons() {
+     const btnGate = document.getElementById("btnAccessGate");
+     const btnWeapon = document.getElementById("btnWeaponShop");
+     const btnArmor  = document.getElementById("btnArmorShop");
+     const btnItem   = document.getElementById("btnItemShop");
+   
+     const gatePanel = document.getElementById("gatePanel");
+     const btnOpenGate  = document.getElementById("btnOpenGate");
+     const btnCloseGate = document.getElementById("btnCloseGate");
+     const w1 = document.getElementById("gateWord1");
+     const w2 = document.getElementById("gateWord2");
+     const w3 = document.getElementById("gateWord3");
+     const out = document.getElementById("gateOutput");
+   
+     function showPlaceholder(msg) {
+       // If you're not in Area view, this still writes to gateOutput if it exists
+       if (out) out.textContent = msg;
+     }
+   
+     // Gate panel open/close
+     if (btnGate && gatePanel) {
+       btnGate.addEventListener("click", () => {
+         gatePanel.classList.remove("hidden");
+         if (out) out.textContent = "(enter 3 keywords)";
+       });
+     }
+   
+     if (btnCloseGate && gatePanel) {
+       btnCloseGate.addEventListener("click", () => gatePanel.classList.add("hidden"));
+     }
+   
+     // Placeholder shop buttons
+     if (btnWeapon) btnWeapon.addEventListener("click", () => showPlaceholder("(weapon shop later)"));
+     if (btnArmor)  btnArmor.addEventListener("click", () => showPlaceholder("(armor shop later)"));
+     if (btnItem)   btnItem.addEventListener("click", () => showPlaceholder("(item shop later)"));
+   
+     // Open Gate => generate + travel
+     if (btnOpenGate && w1 && w2 && w3 && out) {
+       btnOpenGate.addEventListener("click", () => {
+         const a = (w1.value || "").trim();
+         const b = (w2.value || "").trim();
+         const c = (w3.value || "").trim();
+   
+         if (!a || !b || !c) {
+           out.textContent = "(enter 3 keywords)";
+           return;
+         }
+   
+         const rootTownId =
+           currentArea?.type === "Town"
+             ? currentArea.id
+             : (currentArea.rootTownId ?? "TownA");
+   
+         const area = generateAreaFromKeywords(rootTownId, a, b, c);
+   
+         out.textContent =
+           `Gate Opened!\n` +
+           `Destination: ${area.name}\n` +
+           `ID: ${area.id}\n` +
+           `Seed: ${area.seed}\n` +
+           `Rooms: ${area.rooms}\n`;
+   
+         travelToArea(area);
+       });
+     }
+   }
 
-
-    function showPlaceholder(msg) {
-      if (out) out.textContent = msg;
-    }
-
-    if (btnWeapon) btnWeapon.addEventListener("click", () => showPlaceholder("(weapon shop later)"));
-    if (btnArmor) btnArmor.addEventListener("click", () => showPlaceholder("(armor shop later)"));
-    if (btnItem) btnItem.addEventListener("click", () => showPlaceholder("(item shop later)"));
-
-    if (btnCloseGate && gatePanel) {
-      btnCloseGate.addEventListener("click", () => gatePanel.classList.add("hidden"));
-    }
-
-    if (btnOpenGate && w1 && w2 && w3 && out) {
-btnOpenGate.addEventListener("click", () => {
-  const a = (w1.value || "").trim();
-  const b = (w2.value || "").trim();
-  const c = (w3.value || "").trim();
-
-  if (!a || !b || !c) {
-    out.textContent = "(enter 3 keywords)";
-    return;
-  }
-
-  // Generate deterministic area from TownA + keywords and travel there
-  const rootTownId = currentArea?.type === "Town" ? currentArea.id : (currentArea.rootTownId ?? "TownA");
-  const area = generateAreaFromKeywords(rootTownId, a, b, c);
-
-  // Show immediate feedback
-  out.textContent =
-    `Gate Opened!\n` +
-    `Destination: ${area.name}\n` +
-    `ID: ${area.id}\n` +
-    `Seed: ${area.seed}\n` +
-    `Rooms: ${area.rooms}\n`;
-
-  travelToArea(area);
-      });
-    }
-  }
 
   // ─────────────────────────────────────────────
   // Center views / right menu
