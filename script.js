@@ -646,6 +646,7 @@
      saveWorldState();
      // Automatically show Area Info when you travel
      setView("area");
+     renderAreaInfo();
    }
 
    function generateRoomsForArea(seed, roomCount) {
@@ -696,37 +697,72 @@
     name: "TownA",
   };
 
-  function renderAreaInfo() {
-  const areaName = document.getElementById("areaName");
-  const areaType = document.getElementById("areaType");
-  const gatePanel = document.getElementById("gatePanel");
-  const gateOutput = document.getElementById("gateOutput");
-
-  if (areaName) areaName.textContent = currentArea?.name ?? "(unknown)";
-  if (areaType) areaType.textContent = currentArea?.type ?? "(unknown)";
-
-  // Hide gate panel by default
-  if (gatePanel) gatePanel.classList.add("hidden");
-
-  // If we're in town, keep gate output neutral; if we're in a generated area, show summary
-  if (gateOutput) {
-    if (currentArea?.type === "Town") {
-      gateOutput.textContent = "(enter 3 keywords)";
-    } else {
-      gateOutput.textContent =
-        `Arrived: ${currentArea.name}\n` +
-        `ID: ${currentArea.id}\n` +
-        `Seed: ${currentArea.seed}\n` +
-        `Keywords: ${currentArea.keywords.join(" / ")}\n` +
-        `Rec. Level: ${currentArea.recommendedLevel}\n` +
-        `Rooms: ${currentArea.rooms}\n` +
-        `Monster Tier: ${currentArea.monsterTier}\n` +
-        `Loot Tier: ${currentArea.lootTier}\n`;
-        }
-      }
+   function renderAreaInfo() {
+     const areaName = document.getElementById("areaName");
+     const areaType = document.getElementById("areaType");
+     const gatePanel = document.getElementById("gatePanel");
+     const gateOutput = document.getElementById("gateOutput");
+   
+     const btnWeapon = document.getElementById("btnWeaponShop");
+     const btnArmor  = document.getElementById("btnArmorShop");
+     const btnItem   = document.getElementById("btnItemShop");
+   
+     const btnEnter  = document.getElementById("btnEnterArea");
+     const btnNext   = document.getElementById("btnNextRoom");
+     const btnReturn = document.getElementById("btnReturnTown");
+   
+     if (areaName) areaName.textContent = currentArea?.name ?? "(unknown)";
+     if (areaType) areaType.textContent = currentArea?.type ?? "(unknown)";
+   
+     // Hide gate panel by default
+     if (gatePanel) gatePanel.classList.add("hidden");
+   
+     const isTown = currentArea?.type === "Town";
+   
+     // Town buttons visible only in Town
+     [btnWeapon, btnArmor, btnItem].forEach(b => {
+       if (!b) return;
+       b.classList.toggle("hidden", !isTown);
+     });
+   
+     // Area buttons visible only in Field/Dungeon
+     [btnEnter, btnNext, btnReturn].forEach(b => {
+       if (!b) return;
+       b.classList.toggle("hidden", isTown);
+     });
+   
+     if (!gateOutput) return;
+   
+     if (isTown) {
+       gateOutput.textContent = "(enter 3 keywords)";
+       return;
+     }
+   
+     // Field/Dungeon info
+     const kw = (currentArea.keywords && currentArea.keywords.length === 3)
+       ? currentArea.keywords.join(" / ")
+       : "(unknown keywords)";
+   
+     const roomIndex = currentArea.roomIndex ?? 0;
+     const roomsTotal = currentArea.roomsTotal ?? (currentArea.rooms?.length ?? 0);
+     const room = currentArea.rooms?.[roomIndex];
+   
+     gateOutput.textContent =
+       `Keywords: ${kw}\n` +
+       `ID: ${currentArea.id}\n` +
+       `Seed: ${currentArea.seed}\n` +
+       `Rec. Level: ${currentArea.recommendedLevel}\n` +
+       `Monster Tier: ${currentArea.monsterTier}\n` +
+       `Loot Tier: ${currentArea.lootTier}\n\n` +
+       `Progress: Room ${roomIndex + 1} / ${roomsTotal}\n` +
+       `Current Room: ${room?.kind ?? "(unknown)"}`;
    }
+
    
    function hookTownButtons() {
+     const btnEnterArea  = document.getElementById("btnEnterArea");
+     const btnNextRoom   = document.getElementById("btnNextRoom");
+     const btnReturnTown = document.getElementById("btnReturnTown");
      const btnGate = document.getElementById("btnAccessGate");
      const btnWeapon = document.getElementById("btnWeaponShop");
      const btnArmor  = document.getElementById("btnArmorShop");
@@ -761,7 +797,41 @@
      if (btnWeapon) btnWeapon.addEventListener("click", () => showPlaceholder("(weapon shop later)"));
      if (btnArmor)  btnArmor.addEventListener("click", () => showPlaceholder("(armor shop later)"));
      if (btnItem)   btnItem.addEventListener("click", () => showPlaceholder("(item shop later)"));
-   
+
+      if (btnEnterArea) {
+        btnEnterArea.addEventListener("click", () => {
+          if (currentArea?.type === "Town") return;
+          // Just re-render for now; later this can open a "Room panel"
+          renderAreaInfo();
+          saveWorldState();
+        });
+      }
+      
+      if (btnNextRoom) {
+        btnNextRoom.addEventListener("click", () => {
+          if (currentArea?.type === "Town") return;
+      
+          const total = currentArea.roomsTotal ?? (currentArea.rooms?.length ?? 0);
+          if (!total) return;
+      
+          currentArea.roomIndex = Math.min((currentArea.roomIndex ?? 0) + 1, total - 1);
+      
+          renderAreaInfo();
+          saveWorldState();
+        });
+      }
+      
+      if (btnReturnTown) {
+        btnReturnTown.addEventListener("click", () => {
+          // Return to root town if stored, else TownA
+          const townId = currentArea?.rootTownId ?? "TownA";
+          currentArea = { id: townId, type: "Town", name: townId };
+          saveWorldState();
+          setView("area");
+        });
+      }
+
+      
      // Open Gate => generate + travel
      if (btnOpenGate && w1 && w2 && w3 && out) {
        btnOpenGate.addEventListener("click", () => {
