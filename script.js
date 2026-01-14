@@ -58,7 +58,7 @@ function updateRaces() {
 function updateAll() {
   const sp = document.getElementById("species").value;
   const rc = document.getElementById("race").value;
-  const cl = document.getElementById("class").value;
+  const cl = document.getElementById("job").value;
 
   const final = sumMany(base, speciesMods[sp] ?? emptyStats(), raceMods[rc] ?? emptyStats(), classMods[cl] ?? emptyStats());
   render(final);
@@ -66,13 +66,13 @@ function updateAll() {
 
 function init() {
   populateSelect("species", Object.keys(speciesMods));
-  populateSelect("class", Object.keys(classMods));
+  populateSelect("job", Object.keys(classMods));
   updateRaces();
   updateAll();
 
   document.getElementById("species").addEventListener("change", () => { updateRaces(); updateAll(); });
   document.getElementById("race").addEventListener("change", updateAll);
-  document.getElementById("class").addEventListener("change", updateAll);
+  document.getElementById("job").addEventListener("change", updateAll);
 }
 
 init();
