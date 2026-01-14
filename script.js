@@ -608,8 +608,25 @@
       viewKey === "party" ? "Party" :
       "—";
 
-    viewPlaceholder.classList.remove("hidden");
-    placeholderText.textContent = "(nothing here yet)";
+   // For Area Info, show the town/area panel contents
+   if (viewKey === "area") {
+     title.textContent = "Area Info";
+     viewPlaceholder.classList.remove("hidden");
+     renderAreaInfo();
+     return;
+   }
+   
+   // Everything else still uses placeholder text
+   title.textContent =
+     viewKey === "inventory" ? "Inventory" :
+     viewKey === "equipment" ? "Equipment" :
+     viewKey === "skills" ? "Skills / Tech / Magic" :
+     viewKey === "party" ? "Party" :
+     "—";
+   
+   viewPlaceholder.classList.remove("hidden");
+   const pt = document.getElementById("placeholderText");
+   if (pt) pt.textContent = "(nothing here yet)";
   }
 
   function hookRightMenu() {
@@ -621,6 +638,8 @@
     });
   }
 
+   
+   
   // ─────────────────────────────────────────────
   // Storage
   // ─────────────────────────────────────────────
@@ -720,6 +739,84 @@
     saveToBrowser();
   }
 
+   // ─────────────────────────────────────────────
+   // Area / Town state (starter)
+   // ─────────────────────────────────────────────
+   let currentArea = {
+     id: "TownA",
+     type: "Town",
+     name: "TownA",
+   };
+   
+   function renderAreaInfo() {
+     const areaName = document.getElementById("areaName");
+     const areaType = document.getElementById("areaType");
+     const gatePanel = document.getElementById("gatePanel");
+     const gateOutput = document.getElementById("gateOutput");
+   
+     if (!areaName || !areaType) return;
+   
+     areaName.textContent = currentArea.name;
+     areaType.textContent = currentArea.type;
+   
+     // Always collapse gate panel when re-opening Area Info (optional)
+     if (gatePanel) gatePanel.classList.add("hidden");
+     if (gateOutput) gateOutput.textContent = "(enter 3 keywords)";
+   }
+
+   function hookTownButtons() {
+     const btnGate = document.getElementById("btnAccessGate");
+     const btnWeapon = document.getElementById("btnWeaponShop");
+     const btnArmor = document.getElementById("btnArmorShop");
+     const btnItem = document.getElementById("btnItemShop");
+   
+     const gatePanel = document.getElementById("gatePanel");
+     const btnOpenGate = document.getElementById("btnOpenGate");
+     const btnCloseGate = document.getElementById("btnCloseGate");
+   
+     const w1 = document.getElementById("gateWord1");
+     const w2 = document.getElementById("gateWord2");
+     const w3 = document.getElementById("gateWord3");
+     const out = document.getElementById("gateOutput");
+   
+     if (btnGate && gatePanel) {
+       btnGate.addEventListener("click", () => {
+         gatePanel.classList.toggle("hidden");
+       });
+     }
+   
+     function showPlaceholder(msg) {
+       // reuse the gateOutput box if you're in the area panel
+       if (out) out.textContent = msg;
+     }
+   
+     if (btnWeapon) btnWeapon.addEventListener("click", () => showPlaceholder("(weapon shop later)"));
+     if (btnArmor) btnArmor.addEventListener("click", () => showPlaceholder("(armor shop later)"));
+     if (btnItem) btnItem.addEventListener("click", () => showPlaceholder("(item shop later)"));
+   
+     if (btnCloseGate && gatePanel) {
+       btnCloseGate.addEventListener("click", () => gatePanel.classList.add("hidden"));
+     }
+   
+     if (btnOpenGate && w1 && w2 && w3 && out) {
+       btnOpenGate.addEventListener("click", () => {
+         const a = (w1.value || "").trim();
+         const b = (w2.value || "").trim();
+         const c = (w3.value || "").trim();
+   
+         if (!a || !b || !c) {
+           out.textContent = "(enter 3 keywords)";
+           return;
+         }
+   
+         // For now: just display the destination code (seeded RNG comes next)
+         const destinationCode = `${a}::${b}::${c}`;
+         out.textContent = `Destination Code:\n${destinationCode}\n\n(seed + dungeon generation next)`;
+       });
+     }
+   }
+
+
   // ─────────────────────────────────────────────
   // Init
   // ─────────────────────────────────────────────
@@ -752,6 +849,7 @@
 
     hookRightMenu();
     hookSaveButtons();
+    hookTownButtons();
 
     // Default view
     setView("creator");
