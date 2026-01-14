@@ -258,7 +258,6 @@ function renderTree() {
   const treeEl = document.getElementById("tree");
   treeEl.innerHTML = "";
 
-  // Show only talents for current job (SWG “profession box” behavior)
   const visible = talents.filter(t => t.job === jb);
 
   for (const t of visible) {
@@ -271,18 +270,16 @@ function renderTree() {
     if (isActive) el.classList.add("active");
     if (isLocked) el.classList.add("locked");
 
-    el.innerHTML = `
-      <div><strong>${t.name}</strong></div>
-      <div class="req">Requires: ${t.requires.length ? t.requires.join(", ") : "None"}</div>
-    `;
+    el.style.gridColumn = t.col + 1;
+    el.style.gridRow = 5 - t.row; // invert so row 0 is bottom
 
-    // single click = preview
+    el.innerHTML = `<strong>${t.name}</strong>`;
+
     el.addEventListener("click", () => {
       previewTalentId = t.id;
       renderPreview();
     });
 
-    // double click = toggle
     el.addEventListener("dblclick", () => {
       toggleTalent(t.id);
     });
