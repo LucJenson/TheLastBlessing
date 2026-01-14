@@ -143,24 +143,204 @@ function init() {
 // Talent tree data (START SMALL, then expand)
 // ─────────────────────────────────────────────
 
-const talents = [
-  // Blade Brandier sample chain
-  { id:"bb_novice", name:"Novice Blade Brandier", job:"Blade Brandier",
-    stats:{ SP:14, TP:7, PATK:4, PDEF:1, PHIT:3, PEVA:1 }, requires:[] },
+  // ─────────────────────────────────────────────
+// Blade Brandier — SWG-style 4 columns + novice + master
+// Stat order: HP SP TP MP PATK PDEF PHIT PEVA MATK MDEF MHIT MEVA FIR WTR AIR ERT LGT DRK
+// ─────────────────────────────────────────────
 
-  { id:"bb_1", name:"Blade Brandier I", job:"Blade Brandier",
-    stats:{ PATK:2 }, requires:["bb_novice"] },
+const bladeBrandierTalents = [
+  // Center spine
+  {
+    id: "BBNovice",
+    name: "Novice Blade Brandier",
+    job: "Blade Brandier",
+    stats: { HP:0, SP:14, TP:7, MP:0, PATK:4, PDEF:1, PHIT:3, PEVA:1, MATK:0, MDEF:0, MHIT:0, MEVA:0, FIR:0, WTR:0, AIR:0, ERT:0, LGT:0, DRK:0 },
+    requires: [],
+    col: 2,
+    row: 0
+  },
 
-  { id:"bb_2", name:"Blade Brandier II", job:"Blade Brandier",
-    stats:{ PATK:2, PHIT:1 }, requires:["bb_1"] },
+  // Column 1 (xooo) — Sword Handling
+  {
+    id: "BBxoooI",
+    name: "Sword Handling I",
+    job: "Blade Brandier",
+    stats: { HP:0, SP:4, TP:4, MP:0, PATK:1, PDEF:1, PHIT:3, PEVA:1, MATK:0, MDEF:0, MHIT:1, MEVA:0, FIR:0, WTR:0, AIR:0, ERT:0, LGT:0, DRK:0 },
+    requires: ["BBNovice"],
+    col: 0,
+    row: 1
+  },
+  {
+    id: "BBxoooII",
+    name: "Sword Handling II",
+    job: "Blade Brandier",
+    stats: { HP:0, SP:4, TP:6, MP:0, PATK:3, PDEF:1, PHIT:3, PEVA:1, MATK:0, MDEF:0, MHIT:1, MEVA:1, FIR:0, WTR:0, AIR:1, ERT:0, LGT:0, DRK:0 },
+    requires: ["BBxoooI"],
+    col: 0,
+    row: 2
+  },
+  {
+    id: "BBxoooIII",
+    name: "Sword Handling III",
+    job: "Blade Brandier",
+    stats: { HP:7, SP:6, TP:7, MP:0, PATK:3, PDEF:3, PHIT:4, PEVA:3, MATK:0, MDEF:1, MHIT:1, MEVA:1, FIR:0, WTR:0, AIR:1, ERT:0, LGT:1, DRK:0 },
+    requires: ["BBxoooII"],
+    col: 0,
+    row: 3
+  },
+  {
+    id: "BBxoooIV",
+    name: "Sword Handling IV",
+    job: "Blade Brandier",
+    stats: { HP:7, SP:7, TP:9, MP:0, PATK:4, PDEF:3, PHIT:6, PEVA:3, MATK:0, MDEF:1, MHIT:3, MEVA:3, FIR:0, WTR:0, AIR:1, ERT:0, LGT:1, DRK:0 },
+    requires: ["BBxoooIII"],
+    col: 0,
+    row: 4
+  },
 
-  // Twin Blade sample chain
+  // Column 2 (oxoo) — Sword Techniques
+  {
+    id: "BBoxooI",
+    name: "Sword Techniques I",
+    job: "Blade Brandier",
+    stats: { HP:0, SP:6, TP:6, MP:0, PATK:3, PDEF:1, PHIT:1, PEVA:1, MATK:0, MDEF:1, MHIT:0, MEVA:0, FIR:0, WTR:0, AIR:0, ERT:0, LGT:0, DRK:0 },
+    requires: ["BBNovice"],
+    col: 1,
+    row: 1
+  },
+  {
+    id: "BBoxooII",
+    name: "Sword Techniques II",
+    job: "Blade Brandier",
+    stats: { HP:0, SP:7, TP:7, MP:0, PATK:4, PDEF:1, PHIT:1, PEVA:1, MATK:0, MDEF:1, MHIT:0, MEVA:1, FIR:0, WTR:0, AIR:0, ERT:0, LGT:0, DRK:0 },
+    requires: ["BBoxooI"],
+    col: 1,
+    row: 2
+  },
+  {
+    id: "BBoxooIII",
+    name: "Sword Techniques III",
+    job: "Blade Brandier",
+    stats: { HP:7, SP:9, TP:9, MP:0, PATK:4, PDEF:3, PHIT:2, PEVA:2, MATK:0, MDEF:1, MHIT:0, MEVA:1, FIR:0, WTR:0, AIR:0, ERT:0, LGT:0, DRK:0 },
+    requires: ["BBoxooII"],
+    col: 1,
+    row: 3
+  },
+  {
+    id: "BBoxooIV",
+    name: "Sword Techniques IV",
+    job: "Blade Brandier",
+    stats: { HP:7, SP:10, TP:10, MP:0, PATK:6, PDEF:3, PHIT:2, PEVA:2, MATK:0, MDEF:1, MHIT:0, MEVA:1, FIR:0, WTR:0, AIR:0, ERT:0, LGT:0, DRK:0 },
+    requires: ["BBoxooIII"],
+    col: 1,
+    row: 4
+  },
+
+  // Column 3 (ooxo) — Sword Arts
+  {
+    id: "BBooxoI",
+    name: "Sword Arts I",
+    job: "Blade Brandier",
+    stats: { HP:0, SP:6, TP:4, MP:0, PATK:4, PDEF:2, PHIT:2, PEVA:2, MATK:0, MDEF:1, MHIT:1, MEVA:0, FIR:0, WTR:0, AIR:0, ERT:0, LGT:0, DRK:0 },
+    requires: ["BBNovice"],
+    col: 3,
+    row: 1
+  },
+  {
+    id: "BBooxoII",
+    name: "Sword Arts II",
+    job: "Blade Brandier",
+    stats: { HP:0, SP:7, TP:5, MP:0, PATK:4, PDEF:2, PHIT:2, PEVA:2, MATK:0, MDEF:1, MHIT:1, MEVA:0, FIR:0, WTR:0, AIR:0, ERT:0, LGT:0, DRK:0 },
+    requires: ["BBooxoI"],
+    col: 3,
+    row: 2
+  },
+  {
+    id: "BBooxoIII",
+    name: "Sword Arts III",
+    job: "Blade Brandier",
+    stats: { HP:7, SP:9, TP:6, MP:0, PATK:6, PDEF:2, PHIT:3, PEVA:2, MATK:0, MDEF:1, MHIT:1, MEVA:0, FIR:0, WTR:0, AIR:0, ERT:0, LGT:0, DRK:0 },
+    requires: ["BBooxoII"],
+    col: 3,
+    row: 3
+  },
+  {
+    id: "BBooxoIV",
+    name: "Sword Arts IV",
+    job: "Blade Brandier",
+    stats: { HP:7, SP:10, TP:7, MP:0, PATK:6, PDEF:2, PHIT:3, PEVA:2, MATK:0, MDEF:1, MHIT:1, MEVA:0, FIR:0, WTR:0, AIR:0, ERT:0, LGT:0, DRK:0 },
+    requires: ["BBooxoIII"],
+    col: 3,
+    row: 4
+  },
+
+  // Column 4 (ooox) — Slashing Blade
+  {
+    id: "BBoooxI",
+    name: "Slashing Blade I",
+    job: "Blade Brandier",
+    stats: { HP:7, SP:6, TP:5, MP:0, PATK:4, PDEF:2, PHIT:3, PEVA:3, MATK:0, MDEF:0, MHIT:0, MEVA:0, FIR:0, WTR:0, AIR:1, ERT:0, LGT:0, DRK:0 },
+    requires: ["BBNovice"],
+    col: 4,
+    row: 1
+  },
+  {
+    id: "BBoooxII",
+    name: "Slashing Blade II",
+    job: "Blade Brandier",
+    stats: { HP:7, SP:6, TP:6, MP:0, PATK:4, PDEF:2, PHIT:3, PEVA:3, MATK:0, MDEF:0, MHIT:0, MEVA:0, FIR:0, WTR:0, AIR:1, ERT:0, LGT:0, DRK:0 },
+    requires: ["BBoooxI"],
+    col: 4,
+    row: 2
+  },
+  {
+    id: "BBoooxIII",
+    name: "Slashing Blade III",
+    job: "Blade Brandier",
+    stats: { HP:11, SP:7, TP:7, MP:0, PATK:6, PDEF:2, PHIT:4, PEVA:3, MATK:0, MDEF:0, MHIT:1, MEVA:0, FIR:0, WTR:0, AIR:1, ERT:0, LGT:1, DRK:0 },
+    requires: ["BBoooxII"],
+    col: 4,
+    row: 3
+  },
+  {
+    id: "BBoooxIV",
+    name: "Slashing Blade IV",
+    job: "Blade Brandier",
+    stats: { HP:11, SP:7, TP:8, MP:0, PATK:6, PDEF:2, PHIT:4, PEVA:3, MATK:0, MDEF:0, MHIT:1, MEVA:0, FIR:0, WTR:0, AIR:1, ERT:0, LGT:1, DRK:0 },
+    requires: ["BBoooxIII"],
+    col: 4,
+    row: 4
+  },
+
+  // Master (top center)
+  {
+    id: "BBMaster",
+    name: "Master Blade Brandier",
+    job: "Blade Brandier",
+    stats: { HP:22, SP:11, TP:10, MP:0, PATK:6, PDEF:4, PHIT:5, PEVA:4, MATK:0, MDEF:1, MHIT:1, MEVA:1, FIR:0, WTR:0, AIR:1, ERT:0, LGT:2, DRK:0 },
+    // Requires the TOP talent of all 4 columns (IV)
+    requires: ["BBxoooIV", "BBoxooIV", "BBooxoIV", "BBoooxIV"],
+    col: 2,
+    row: 4
+  }
+];
+
+
+// Twin Blade sample chain
+const twinBladeTalents = [
   { id:"tb_novice", name:"Novice Twin Blade", job:"Twin Blade",
     stats:{ HP:12, SP:9, TP:9, MP:2, PATK:3, PDEF:1, PHIT:3, PEVA:2, MATK:1, MDEF:1, MHIT:1, MEVA:1, WTR:1, AIR:1, DRK:1 },
     requires:[] },
 
   { id:"tb_1", name:"Twin Blade I", job:"Twin Blade",
     stats:{ PEVA:1 }, requires:["tb_novice"] },
+];
+
+
+const talents = [
+  ...bladeBrandierTalents,
+  ...twinBladeTalents
+  // later: ...waveUserTalents, ...harvestClericTalents
 ];
 
 // Quick lookup maps
