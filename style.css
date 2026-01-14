@@ -3,16 +3,33 @@ body { font-family: system-ui, sans-serif; margin: 24px; }
 label { display: flex; flex-direction: column; gap: 6px; }
 pre { background: #f4f4f4; padding: 12px; border-radius: 8px; }
 .layout { display: grid; grid-template-columns: 1fr 360px; gap: 16px; align-items: start; }
-#tree { display: grid; gap: 8px; }
+#tree {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, auto);
+  gap: 12px;
+  align-items: center;
+  justify-items: center;
+  padding: 12px;
+}
 
 .talent {
-  border: 1px solid #ccc;
+  width: 140px;
+  min-height: 64px;
+  border: 1px solid #aaa;
   border-radius: 8px;
-  padding: 10px;
-  cursor: pointer;
-  user-select: none;
+  padding: 8px;
+  text-align: center;
+  background: #fafafa;
 }
-.talent.locked { opacity: 0.5; }
-.talent.active { border-width: 2px; }
+
+.talent.active {
+  border-width: 2px;
+}
+
+.talent.locked {
+  opacity: 0.45;
+}
+
 .talent .req { font-size: 12px; opacity: 0.8; margin-top: 6px; }
 
