@@ -563,6 +563,106 @@
     saveToBrowser();
   }
 
+   // ─────────────────────────────────────────────
+   // Deterministic seed + RNG (same keywords => same area)
+   // ─────────────────────────────────────────────
+   function hashStringToUint32(str) {
+     // FNV-1a 32-bit
+     let h = 0x811c9dc5;
+     for (let i = 0; i < str.length; i++) {
+       h ^= str.charCodeAt(i);
+       h = Math.imul(h, 0x01000193);
+     }
+     return h >>> 0;
+   }
+   
+   function mulberry32(seed) {
+     return function () {
+       let t = (seed += 0x6D2B79F5);
+       t = Math.imul(t ^ (t >>> 15), t | 1);
+       t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+     };
+   }
+   
+   function pick(rng, arr) {
+     return arr[Math.floor(rng() * arr.length)];
+   }
+   
+   function randInt(rng, min, max) {
+     return Math.floor(rng() * (max - min + 1)) + min;
+   }
+
+   // ─────────────────────────────────────────────
+   // Area generation
+   // ─────────────────────────────────────────────
+   function generateAreaFromKeywords(rootTownId, w1, w2, w3) {
+     const phrase = `${rootTownId}::${w1}::${w2}::${w3}`.toLowerCase();
+     const seed = hashStringToUint32(phrase);
+     const rng = mulberry32(seed);
+   
+     const biomes = ["Ruins", "Forest", "Wetlands", "Cavern", "Highlands", "Coast"];
+     const moods  = ["Quiet", "Haunted", "Feral", "Ancient", "Stormy", "Glittering"];
+     const types  = ["Field", "Dungeon"]; // keep it simple for now
+   
+     const type = pick(rng, types);
+     const biome = pick(rng, biomes);
+     const mood = pick(rng, moods);
+   
+     // Later: tie this to player level + keyword tiers + town
+     const level = randInt(rng, 1, 5);
+     const rooms = type === "Dungeon" ? randInt(rng, 6, 12) : randInt(rng, 3, 6);
+   
+     const monsterTier = Math.max(1, Math.floor((level + randInt(rng, 0, 2)) / 2));
+     const lootTier = Math.max(1, Math.floor((level + randInt(rng, 0, 2)) / 2));
+   
+     const areaId = `A_${seed.toString(16).padStart(8, "0")}`;
+     const name = `${mood} ${biome} (${type})`;
+   
+     return {
+       id: areaId,
+       seed,
+       phrase,
+       type,
+       name,
+       rootTownId,
+       keywords: [w1, w2, w3],
+       recommendedLevel: level,
+       rooms,
+       monsterTier,
+       lootTier,
+       // room-by-room comes next; this is enough to "arrive"
+     };
+   }
+   
+   function travelToArea(areaObj) {
+     currentArea = areaObj;
+     saveWorldState();
+     // Automatically show Area Info when you travel
+     setView("area");
+   }
+
+   // ─────────────────────────────────────────────
+   // World state storage (current area)
+   // ─────────────────────────────────────────────
+   const WORLD_KEY = "dreamGameWorld_v1";
+   
+   function saveWorldState() {
+     try {
+       localStorage.setItem(WORLD_KEY, JSON.stringify({ currentArea }));
+     } catch {}
+   }
+   
+   function loadWorldState() {
+     try {
+       const raw = localStorage.getItem(WORLD_KEY);
+       if (!raw) return;
+       const data = JSON.parse(raw);
+       if (data?.currentArea?.id) currentArea = data.currentArea;
+     } catch {}
+   }
+
+   
   // ─────────────────────────────────────────────
   // Area / Town state (starter)
   // ─────────────────────────────────────────────
@@ -573,38 +673,35 @@
   };
 
   function renderAreaInfo() {
-    const areaName = document.getElementById("areaName");
-    const areaType = document.getElementById("areaType");
-    const gatePanel = document.getElementById("gatePanel");
-    const gateOutput = document.getElementById("gateOutput");
+  const areaName = document.getElementById("areaName");
+  const areaType = document.getElementById("areaType");
+  const gatePanel = document.getElementById("gatePanel");
+  const gateOutput = document.getElementById("gateOutput");
 
-    if (areaName) areaName.textContent = currentArea.name;
-    if (areaType) areaType.textContent = currentArea.type;
+  if (areaName) areaName.textContent = currentArea?.name ?? "(unknown)";
+  if (areaType) areaType.textContent = currentArea?.type ?? "(unknown)";
 
-    if (gatePanel) gatePanel.classList.add("hidden");
-    if (gateOutput) gateOutput.textContent = "(enter 3 keywords)";
-  }
+  // Hide gate panel by default
+  if (gatePanel) gatePanel.classList.add("hidden");
 
-  function hookTownButtons() {
-    const btnGate = document.getElementById("btnAccessGate");
-    const btnWeapon = document.getElementById("btnWeaponShop");
-    const btnArmor = document.getElementById("btnArmorShop");
-    const btnItem = document.getElementById("btnItemShop");
-
-    const gatePanel = document.getElementById("gatePanel");
-    const btnOpenGate = document.getElementById("btnOpenGate");
-    const btnCloseGate = document.getElementById("btnCloseGate");
-
-    const w1 = document.getElementById("gateWord1");
-    const w2 = document.getElementById("gateWord2");
-    const w3 = document.getElementById("gateWord3");
-    const out = document.getElementById("gateOutput");
-
-    if (btnGate && gatePanel) {
-      btnGate.addEventListener("click", () => {
-        gatePanel.classList.toggle("hidden");
-      });
+  // If we're in town, keep gate output neutral; if we're in a generated area, show summary
+  if (gateOutput) {
+    if (currentArea?.type === "Town") {
+      gateOutput.textContent = "(enter 3 keywords)";
+    } else {
+      gateOutput.textContent =
+        `Arrived: ${currentArea.name}\n` +
+        `ID: ${currentArea.id}\n` +
+        `Seed: ${currentArea.seed}\n` +
+        `Keywords: ${currentArea.keywords.join(" / ")}\n` +
+        `Rec. Level: ${currentArea.recommendedLevel}\n` +
+        `Rooms: ${currentArea.rooms}\n` +
+        `Monster Tier: ${currentArea.monsterTier}\n` +
+        `Loot Tier: ${currentArea.lootTier}\n`;
     }
+  }
+}
+
 
     function showPlaceholder(msg) {
       if (out) out.textContent = msg;
@@ -619,18 +716,29 @@
     }
 
     if (btnOpenGate && w1 && w2 && w3 && out) {
-      btnOpenGate.addEventListener("click", () => {
-        const a = (w1.value || "").trim();
-        const b = (w2.value || "").trim();
-        const c = (w3.value || "").trim();
+btnOpenGate.addEventListener("click", () => {
+  const a = (w1.value || "").trim();
+  const b = (w2.value || "").trim();
+  const c = (w3.value || "").trim();
 
-        if (!a || !b || !c) {
-          out.textContent = "(enter 3 keywords)";
-          return;
-        }
+  if (!a || !b || !c) {
+    out.textContent = "(enter 3 keywords)";
+    return;
+  }
 
-        const destinationCode = `${a}::${b}::${c}`;
-        out.textContent = `Destination Code:\n${destinationCode}\n\n(seed + dungeon generation next)`;
+  // Generate deterministic area from TownA + keywords and travel there
+  const rootTownId = currentArea?.type === "Town" ? currentArea.id : (currentArea.rootTownId ?? "TownA");
+  const area = generateAreaFromKeywords(rootTownId, a, b, c);
+
+  // Show immediate feedback
+  out.textContent =
+    `Gate Opened!\n` +
+    `Destination: ${area.name}\n` +
+    `ID: ${area.id}\n` +
+    `Seed: ${area.seed}\n` +
+    `Rooms: ${area.rooms}\n`;
+
+  travelToArea(area);
       });
     }
   }
@@ -805,8 +913,10 @@
     updateRaces();
     loadFromBrowser();
 
+    loadWorldState();
+     
     ensureNoviceForJob(el("job").value);
-
+   
     el("species").addEventListener("change", () => {
       updateRaces();
       updateAll();
@@ -821,6 +931,7 @@
     hookRightMenu();
     hookSaveButtons();
     hookTownButtons();
+     
 
     setView("creator");
 
