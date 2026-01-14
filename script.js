@@ -117,9 +117,13 @@ function updateAll() {
   const sp = document.getElementById("species").value;
   const rc = document.getElementById("race").value;
   const jb = document.getElementById("job").value;
+  
 
   const final = sumMany(base, speciesMods[sp] ?? emptyStats(), raceMods[rc] ?? emptyStats(), jobMods[jb] ?? emptyStats());
   render(final);
+  renderTree();
+  renderTotals();
+  renderPreview();
 }
 
 function init() {
@@ -127,11 +131,231 @@ function init() {
   populateSelect("job", Object.keys(jobMods));
   updateRaces();
   updateAll();
-
   document.getElementById("species").addEventListener("change", () => { updateRaces(); updateAll(); });
   document.getElementById("race").addEventListener("change", updateAll);
-  document.getElementById("job").addEventListener("change", updateAll);
+  document.getElementById("job").addEventListener("change", () => {
+  onJobChanged();   // talent logic
+  updateAll();      // stat logic
+  });
 }
+
+// ─────────────────────────────────────────────
+// Talent tree data (START SMALL, then expand)
+// ─────────────────────────────────────────────
+
+const talents = [
+  // Blade Brandier sample chain
+  { id:"bb_novice", name:"Novice Blade Brandier", job:"Blade Brandier",
+    stats:{ SP:14, TP:7, PATK:4, PDEF:1, PHIT:3, PEVA:1 }, requires:[] },
+
+  { id:"bb_1", name:"Blade Brandier I", job:"Blade Brandier",
+    stats:{ PATK:2 }, requires:["bb_novice"] },
+
+  { id:"bb_2", name:"Blade Brandier II", job:"Blade Brandier",
+    stats:{ PATK:2, PHIT:1 }, requires:["bb_1"] },
+
+  // Twin Blade sample chain
+  { id:"tb_novice", name:"Novice Twin Blade", job:"Twin Blade",
+    stats:{ HP:12, SP:9, TP:9, MP:2, PATK:3, PDEF:1, PHIT:3, PEVA:2, MATK:1, MDEF:1, MHIT:1, MEVA:1, WTR:1, AIR:1, DRK:1 },
+    requires:[] },
+
+  { id:"tb_1", name:"Twin Blade I", job:"Twin Blade",
+    stats:{ PEVA:1 }, requires:["tb_novice"] },
+];
+
+// Quick lookup maps
+const talentById = Object.fromEntries(talents.map(t => [t.id, t]));
+
+// Reverse graph: prereq -> dependents
+const dependentsMap = (() => {
+  const m = {};
+  for (const t of talents) {
+    for (const req of t.requires) {
+      if (!m[req]) m[req] = [];
+      m[req].push(t.id);
+    }
+  }
+  return m;
+})();
+
+// Active talents (IDs)
+let activeTalents = new Set();
+
+// Current preview
+let previewTalentId = null;
+
+// ─────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────
+function canActivate(tid) {
+  const t = talentById[tid];
+  return t.requires.every(r => activeTalents.has(r));
+}
+
+function getAllDependentsClosure(rootId) {
+  // all nodes that (directly/indirectly) depend on rootId
+  const out = new Set();
+  const stack = [...(dependentsMap[rootId] ?? [])];
+  while (stack.length) {
+    const id = stack.pop();
+    if (out.has(id)) continue;
+    out.add(id);
+    const kids = dependentsMap[id] ?? [];
+    for (const k of kids) stack.push(k);
+  }
+  return out;
+}
+
+function statAdd(a, b) {
+  const out = {};
+  for (const s of STATS) out[s] = (a[s] ?? 0) + (b[s] ?? 0);
+  return out;
+}
+
+function formatStats(statsObj) {
+  const lines = [];
+  for (const s of STATS) {
+    const v = statsObj[s] ?? 0;
+    if (v !== 0) lines.push(`${s.padEnd(4)} ${String(v).padStart(4)}`);
+  }
+  return lines.length ? lines.join("\n") : "(no stat changes)";
+}
+
+function sumTalentStats() {
+  let total = emptyStats();
+  for (const tid of activeTalents) {
+    total = statAdd(total, talentById[tid].stats);
+  }
+  return total;
+}
+
+// ─────────────────────────────────────────────
+// Integrate with your existing character calc
+// ─────────────────────────────────────────────
+function computeFinalWithTalents() {
+  const sp = document.getElementById("species").value;
+  const rc = document.getElementById("race").value;
+  const jb = document.getElementById("job").value;
+
+  // base/species/race/job as before
+  const baseLayer = sumMany(
+    base,
+    speciesMods[sp] ?? emptyStats(),
+    raceMods[rc] ?? emptyStats(),
+    jobMods[jb] ?? emptyStats()
+  );
+
+  // talents on top
+  const talentLayer = sumTalentStats();
+  return statAdd(baseLayer, talentLayer);
+}
+
+// ─────────────────────────────────────────────
+// UI
+// ─────────────────────────────────────────────
+function renderTree() {
+  const jb = document.getElementById("job").value;
+  const treeEl = document.getElementById("tree");
+  treeEl.innerHTML = "";
+
+  // Show only talents for current job (SWG “profession box” behavior)
+  const visible = talents.filter(t => t.job === jb);
+
+  for (const t of visible) {
+    const el = document.createElement("div");
+    el.className = "talent";
+
+    const isActive = activeTalents.has(t.id);
+    const isLocked = !isActive && !canActivate(t.id);
+
+    if (isActive) el.classList.add("active");
+    if (isLocked) el.classList.add("locked");
+
+    el.innerHTML = `
+      <div><strong>${t.name}</strong></div>
+      <div class="req">Requires: ${t.requires.length ? t.requires.join(", ") : "None"}</div>
+    `;
+
+    // single click = preview
+    el.addEventListener("click", () => {
+      previewTalentId = t.id;
+      renderPreview();
+    });
+
+    // double click = toggle
+    el.addEventListener("dblclick", () => {
+      toggleTalent(t.id);
+    });
+
+    treeEl.appendChild(el);
+  }
+}
+
+function renderPreview() {
+  const p = document.getElementById("preview");
+  if (!previewTalentId) {
+    p.textContent = "(click a talent)";
+    return;
+  }
+  const t = talentById[previewTalentId];
+  p.textContent =
+    `${t.name}\n\n` +
+    `Requires: ${t.requires.length ? t.requires.join(", ") : "None"}\n\n` +
+    `Stats:\n${formatStats(t.stats)}\n`;
+}
+
+function renderTotals() {
+  const totalsEl = document.getElementById("totals");
+  const final = computeFinalWithTalents();
+  const lines = STATS.map(s => `${s.padEnd(4)} ${String(final[s]).padStart(4)}`);
+  totalsEl.textContent = lines.join("\n");
+}
+
+// Main toggle behavior (SWG style)
+function toggleTalent(tid) {
+  const t = talentById[tid];
+  const jb = document.getElementById("job").value;
+
+  // Safety: only allow toggling talents in current job group
+  if (t.job !== jb) return;
+
+  if (activeTalents.has(tid)) {
+    // Deactivate this + everything that depends on it
+    const dependents = getAllDependentsClosure(tid);
+    activeTalents.delete(tid);
+    for (const d of dependents) activeTalents.delete(d);
+  } else {
+    // Activate only if prereqs are met
+    if (!canActivate(tid)) return;
+    activeTalents.add(tid);
+  }
+
+  renderTree();
+  renderTotals();
+  renderPreview();
+}
+
+// When job changes: auto-grant novice talent, clear other job talents
+function onJobChanged() {
+  const jb = document.getElementById("job").value;
+  
+  // Remove talents not belonging to this job
+  for (const tid of [...activeTalents]) {
+    if (talentById[tid]?.job !== jb) activeTalents.delete(tid);
+  }
+
+  // Auto-grant novice talent for this job (if you want that behavior)
+  const novice = talents.find(t => t.job === jb && t.requires.length === 0 && t.name.startsWith("Novice"));
+  if (novice) activeTalents.add(novice.id);
+
+  previewTalentId = null;
+  renderTree();
+  renderTotals();
+  renderPreview();
+  
+}
+
+
 
 init();
 
