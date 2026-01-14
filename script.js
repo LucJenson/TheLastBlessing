@@ -116,9 +116,9 @@ function updateRaces() {
 function updateAll() {
   const sp = document.getElementById("species").value;
   const rc = document.getElementById("race").value;
-  const cl = document.getElementById("job").value;
+  const jb = document.getElementById("job").value;
 
-  const final = sumMany(base, speciesMods[sp] ?? emptyStats(), raceMods[rc] ?? emptyStats(), jobMods[cl] ?? emptyStats());
+  const final = sumMany(base, speciesMods[sp] ?? emptyStats(), raceMods[rc] ?? emptyStats(), jobMods[jb] ?? emptyStats());
   render(final);
 }
 
