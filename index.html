@@ -8,38 +8,108 @@
   <script src="script.js" defer></script>
 </head>
 <body>
-  <h1>Dream Game Stat Tester</h1>
+  <div class="app">
 
-  <div class="row">
-    <label>Species:
-      <select id="species"></select>
-    </label>
+    <!-- LEFT: Always-on character sheet -->
+    <aside class="panel left">
+      <h2>Character</h2>
 
-    <label>Race:
-      <select id="race"></select>
-    </label>
+      <div class="char-meta">
+        <div class="field">
+          <label>Name</label>
+          <input id="charName" type="text" placeholder="Enter name…" />
+        </div>
 
-    <label>Class:
-      <select id="job"></select>
-    </label>
+        <div class="field two">
+          <div>
+            <label>Level</label>
+            <input id="charLevel" type="number" min="1" value="1" />
+          </div>
+          <div>
+            <label>EXP</label>
+            <input id="charExp" type="number" min="0" value="0" />
+          </div>
+        </div>
+
+        <div class="save-row">
+          <button id="btnSave">Save</button>
+          <button id="btnReset">Reset</button>
+        </div>
+      </div>
+
+      <h3>Stats</h3>
+      <div id="statsTable" class="stats-table"></div>
+    </aside>
+
+    <!-- CENTER: Main content -->
+    <main class="panel center">
+      <div id="centerHeader" class="center-header">
+        <h2 id="centerTitle">Character Creator</h2>
+      </div>
+
+      <section id="centerContent" class="center-content">
+        <!-- Character Creator View -->
+        <div id="viewCreator" class="view">
+          <div class="creator-grid">
+            <div class="field">
+              <label>Species</label>
+              <select id="species"></select>
+            </div>
+
+            <div class="field">
+              <label>Race</label>
+              <select id="race"></select>
+            </div>
+
+            <div class="field">
+              <label>Job</label>
+              <select id="job"></select>
+            </div>
+          </div>
+
+          <p class="hint">
+            Tip: Click talents on the right to open the talent tree. Double-click talents to activate/deactivate.
+          </p>
+        </div>
+
+        <!-- Talents View -->
+        <div id="viewTalents" class="view hidden">
+          <div class="layout">
+            <div>
+              <div id="tree"></div>
+            </div>
+            <div>
+              <h3>Preview</h3>
+              <pre id="preview">(click a talent)</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Placeholder Views -->
+        <div id="viewPlaceholder" class="view hidden">
+          <p id="placeholderText" class="placeholder">(nothing here yet)</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- RIGHT: Navigation -->
+    <aside class="panel right">
+      <h2>Menu</h2>
+      <div class="nav">
+        <button class="navbtn" data-view="inventory">Inventory</button>
+        <button class="navbtn" data-view="equipment">Equipment</button>
+        <button class="navbtn" data-view="talents">Talents</button>
+        <button class="navbtn" data-view="area">Area Info</button>
+        <button class="navbtn" data-view="skills">Skills / Tech / Magic</button>
+        <button class="navbtn" data-view="party">Party</button>
+        <button class="navbtn danger" data-view="back">Back</button>
+      </div>
+    </aside>
+
   </div>
 
-  <h2>Talent Tree</h2>
-<div class="layout">
-  <div>
-    <div id="tree"></div>
-  </div>
-  <div>
-    <h3>Preview</h3>
-    <pre id="preview">(click a talent)</pre>
-
-    <h3>Totals</h3>
-    <pre id="totals"></pre>
-  </div>
-</div>
-
-  <h2>Final Stats</h2>
-  <pre id="output"></pre>
+  <script src="script.js"></script>
 </body>
+
 </html>
 
