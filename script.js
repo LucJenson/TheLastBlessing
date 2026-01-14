@@ -327,20 +327,557 @@ const bladeBrandierTalents = [
 
 
 // Twin Blade sample chain
-const twinBladeTalents = [
-  { id:"tb_novice", name:"Novice Twin Blade", job:"Twin Blade",
-    stats:{ HP:12, SP:9, TP:9, MP:2, PATK:3, PDEF:1, PHIT:3, PEVA:2, MATK:1, MDEF:1, MHIT:1, MEVA:1, WTR:1, AIR:1, DRK:1 },
-    requires:[] },
+// ─────────────────────────────────────────────
+// Twin Blade — SWG-style 4 columns + novice + master
+// Stat order: HP SP TP MP PATK PDEF PHIT PEVA MATK MDEF MHIT MEVA FIR WTR AIR ERT LGT DRK
+// NOTE: Fixed ID typo: Close Combat II is TBoxooII (you pasted TBoxooIII twice).
+// ─────────────────────────────────────────────
 
-  { id:"tb_1", name:"Twin Blade I", job:"Twin Blade",
-    stats:{ PEVA:1 }, requires:["tb_novice"] },
+const twinBladeTalents = [
+  // Center spine
+  {
+    id: "TBNovice",
+    name: "Novice Twin Blade",
+    job: "Twin Blade",
+    stats: { HP:12, SP:9, TP:9, MP:2, PATK:3, PDEF:1, PHIT:3, PEVA:2, MATK:1, MDEF:1, MHIT:1, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:1 },
+    requires: [],
+    col: 2,
+    row: 0
+  },
+
+  // Column 1 (xooo) — Aim
+  {
+    id: "TBxoooI",
+    name: "Aim I",
+    job: "Twin Blade",
+    stats: { HP:6, SP:3, TP:5, MP:0, PATK:2, PDEF:0, PHIT:3, PEVA:1, MATK:0, MDEF:0, MHIT:1, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:0 },
+    requires: ["TBNovice"],
+    col: 0,
+    row: 1
+  },
+  {
+    id: "TBxoooII",
+    name: "Aim II",
+    job: "Twin Blade",
+    stats: { HP:6, SP:3, TP:5, MP:0, PATK:2, PDEF:0, PHIT:3, PEVA:1, MATK:0, MDEF:0, MHIT:1, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:0 },
+    requires: ["TBxoooI"],
+    col: 0,
+    row: 2
+  },
+  {
+    id: "TBxoooIII",
+    name: "Aim III",
+    job: "Twin Blade",
+    stats: { HP:12, SP:5, TP:6, MP:0, PATK:3, PDEF:0, PHIT:3, PEVA:1, MATK:0, MDEF:0, MHIT:2, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:1 },
+    requires: ["TBxoooII"],
+    col: 0,
+    row: 3
+  },
+  {
+    id: "TBxoooIV",
+    name: "Aim IV",
+    job: "Twin Blade",
+    stats: { HP:12, SP:5, TP:6, MP:0, PATK:3, PDEF:0, PHIT:5, PEVA:1, MATK:0, MDEF:0, MHIT:2, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:1 },
+    requires: ["TBxoooIII"],
+    col: 0,
+    row: 4
+  },
+
+  // Column 2 (oxoo) — Close Combat
+  {
+    id: "TBoxooI",
+    name: "Close Combat I",
+    job: "Twin Blade",
+    stats: { HP:12, SP:5, TP:3, MP:0, PATK:3, PDEF:1, PHIT:2, PEVA:2, MATK:0, MDEF:1, MHIT:1, MEVA:1, FIR:0, WTR:0, AIR:1, ERT:0, LGT:0, DRK:1 },
+    requires: ["TBNovice"],
+    col: 1,
+    row: 1
+  },
+  {
+    id: "TBoxooII",
+    name: "Close Combat II",
+    job: "Twin Blade",
+    stats: { HP:12, SP:5, TP:3, MP:0, PATK:3, PDEF:1, PHIT:2, PEVA:2, MATK:0, MDEF:1, MHIT:1, MEVA:1, FIR:0, WTR:0, AIR:1, ERT:0, LGT:0, DRK:1 },
+    requires: ["TBoxooI"],
+    col: 1,
+    row: 2
+  },
+  {
+    id: "TBoxooIII",
+    name: "Close Combat III",
+    job: "Twin Blade",
+    stats: { HP:18, SP:6, TP:4, MP:0, PATK:4, PDEF:1, PHIT:2, PEVA:3, MATK:0, MDEF:1, MHIT:1, MEVA:1, FIR:0, WTR:0, AIR:1, ERT:0, LGT:0, DRK:1 },
+    requires: ["TBoxooII"],
+    col: 1,
+    row: 3
+  },
+  {
+    id: "TBoxooIV",
+    name: "Close Combat IV",
+    job: "Twin Blade",
+    stats: { HP:18, SP:6, TP:4, MP:0, PATK:4, PDEF:1, PHIT:4, PEVA:3, MATK:0, MDEF:1, MHIT:1, MEVA:1, FIR:0, WTR:0, AIR:1, ERT:0, LGT:0, DRK:1 },
+    requires: ["TBoxooIII"],
+    col: 1,
+    row: 4
+  },
+
+  // Column 3 (ooxo) — Stealth
+  {
+    id: "TBooxoI",
+    name: "Stealth I",
+    job: "Twin Blade",
+    stats: { HP:6, SP:4, TP:4, MP:0, PATK:2, PDEF:0, PHIT:2, PEVA:3, MATK:0, MDEF:1, MHIT:1, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:1 },
+    requires: ["TBNovice"],
+    col: 3,
+    row: 1
+  },
+  {
+    id: "TBooxoII",
+    name: "Stealth II",
+    job: "Twin Blade",
+    stats: { HP:6, SP:4, TP:4, MP:0, PATK:2, PDEF:0, PHIT:2, PEVA:3, MATK:0, MDEF:1, MHIT:1, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:1 },
+    requires: ["TBooxoI"],
+    col: 3,
+    row: 2
+  },
+  {
+    id: "TBooxoIII",
+    name: "Stealth III",
+    job: "Twin Blade",
+    stats: { HP:12, SP:5, TP:5, MP:0, PATK:3, PDEF:0, PHIT:2, PEVA:4, MATK:0, MDEF:1, MHIT:1, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:1 },
+    requires: ["TBooxoII"],
+    col: 3,
+    row: 3
+  },
+  {
+    id: "TBooxoIV",
+    name: "Stealth IV",
+    job: "Twin Blade",
+    stats: { HP:12, SP:5, TP:5, MP:0, PATK:3, PDEF:0, PHIT:4, PEVA:4, MATK:0, MDEF:1, MHIT:1, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:1 },
+    requires: ["TBooxoIII"],
+    col: 3,
+    row: 4
+  },
+
+  // Column 4 (ooox) — Tracking
+  {
+    id: "TBoooxI",
+    name: "Tracking I",
+    job: "Twin Blade",
+    stats: { HP:6, SP:3, TP:4, MP:1, PATK:2, PDEF:1, PHIT:2, PEVA:2, MATK:0, MDEF:1, MHIT:1, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:1 },
+    requires: ["TBNovice"],
+    col: 4,
+    row: 1
+  },
+  {
+    id: "TBoooxII",
+    name: "Tracking II",
+    job: "Twin Blade",
+    stats: { HP:6, SP:3, TP:4, MP:1, PATK:2, PDEF:1, PHIT:2, PEVA:2, MATK:0, MDEF:1, MHIT:1, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:1 },
+    requires: ["TBoooxI"],
+    col: 4,
+    row: 2
+  },
+  {
+    id: "TBoooxIII",
+    name: "Tracking III",
+    job: "Twin Blade",
+    stats: { HP:12, SP:5, TP:5, MP:1, PATK:3, PDEF:1, PHIT:2, PEVA:2, MATK:0, MDEF:1, MHIT:2, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:1 },
+    requires: ["TBoooxII"],
+    col: 4,
+    row: 3
+  },
+  {
+    id: "TBoooxIV",
+    name: "Tracking IV",
+    job: "Twin Blade",
+    stats: { HP:12, SP:5, TP:5, MP:1, PATK:3, PDEF:1, PHIT:2, PEVA:2, MATK:0, MDEF:1, MHIT:2, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:1 },
+    requires: ["TBoooxIII"],
+    col: 4,
+    row: 4
+  },
+
+  // Master (top center)
+  {
+    id: "TBMaster",
+    name: "Master Twin Blade",
+    job: "Twin Blade",
+    stats: { HP:24, SP:8, TP:8, MP:3, PATK:4, PDEF:2, PHIT:4, PEVA:4, MATK:1, MDEF:2, MHIT:2, MEVA:2, FIR:0, WTR:2, AIR:2, ERT:0, LGT:1, DRK:2 },
+    requires: ["TBxoooIV", "TBoxooIV", "TBooxoIV", "TBoooxIV"],
+    col: 2,
+    row: 4
+  }
+];
+
+// ─────────────────────────────────────────────
+// Wave User — SWG-style 4 columns + novice + master
+// Stat order: HP SP TP MP PATK PDEF PHIT PEVA MATK MDEF MHIT MEVA FIR WTR AIR ERT LGT DRK
+// ─────────────────────────────────────────────
+
+const waveUserTalents = [
+  // Center spine
+  {
+    id: "WUNovice",
+    name: "Novice Wave User",
+    job: "Wave User",
+    stats: { HP:14, SP:6, TP:4, MP:16, PATK:1, PDEF:1, PHIT:3, PEVA:3, MATK:6, MDEF:5, MHIT:5, MEVA:4, FIR:1, WTR:3, AIR:3, ERT:0, LGT:3, DRK:0 },
+    requires: [],
+    col: 2,
+    row: 0
+  },
+
+  // Column 1 (xooo) — Wave Magic
+  {
+    id: "WUxoooI",
+    name: "Wave Magic I",
+    job: "Wave User",
+    stats: { HP:5, SP:2, TP:0, MP:9, PATK:0, PDEF:0, PHIT:1, PEVA:0, MATK:4, MDEF:1, MHIT:3, MEVA:1, FIR:1, WTR:2, AIR:1, ERT:0, LGT:1, DRK:0 },
+    requires: ["WUNovice"],
+    col: 0,
+    row: 1
+  },
+  {
+    id: "WUxoooII",
+    name: "Wave Magic II",
+    job: "Wave User",
+    stats: { HP:5, SP:2, TP:0, MP:9, PATK:0, PDEF:0, PHIT:1, PEVA:0, MATK:5, MDEF:1, MHIT:3, MEVA:1, FIR:1, WTR:2, AIR:1, ERT:0, LGT:1, DRK:0 },
+    requires: ["WUxoooI"],
+    col: 0,
+    row: 2
+  },
+  {
+    id: "WUxoooIII",
+    name: "Wave Magic III",
+    job: "Wave User",
+    stats: { HP:9, SP:3, TP:0, MP:8, PATK:0, PDEF:0, PHIT:1, PEVA:0, MATK:6, MDEF:1, MHIT:3, MEVA:1, FIR:2, WTR:2, AIR:1, ERT:0, LGT:1, DRK:1 },
+    requires: ["WUxoooII"],
+    col: 0,
+    row: 3
+  },
+  {
+    id: "WUxoooIV",
+    name: "Wave Magic IV",
+    job: "Wave User",
+    stats: { HP:9, SP:3, TP:0, MP:9, PATK:0, PDEF:0, PHIT:1, PEVA:0, MATK:7, MDEF:1, MHIT:3, MEVA:1, FIR:2, WTR:2, AIR:1, ERT:0, LGT:1, DRK:1 },
+    requires: ["WUxoooIII"],
+    col: 0,
+    row: 4
+  },
+
+  // Column 2 (oxoo) — Focus
+  {
+    id: "WUoxooI",
+    name: "Focus I",
+    job: "Wave User",
+    stats: { HP:5, SP:1, TP:1, MP:6, PATK:0, PDEF:1, PHIT:1, PEVA:1, MATK:3, MDEF:3, MHIT:3, MEVA:3, FIR:0, WTR:1, AIR:2, ERT:0, LGT:2, DRK:0 },
+    requires: ["WUNovice"],
+    col: 1,
+    row: 1
+  },
+  {
+    id: "WUoxooII",
+    name: "Focus II",
+    job: "Wave User",
+    stats: { HP:5, SP:1, TP:1, MP:6, PATK:0, PDEF:1, PHIT:1, PEVA:1, MATK:3, MDEF:3, MHIT:3, MEVA:3, FIR:0, WTR:1, AIR:2, ERT:0, LGT:2, DRK:0 },
+    requires: ["WUoxooI"],
+    col: 1,
+    row: 2
+  },
+  {
+    id: "WUoxooIII",
+    name: "Focus III",
+    job: "Wave User",
+    stats: { HP:8, SP:2, TP:1, MP:7, PATK:0, PDEF:1, PHIT:1, PEVA:1, MATK:4, MDEF:3, MHIT:3, MEVA:3, FIR:0, WTR:1, AIR:2, ERT:0, LGT:3, DRK:0 },
+    requires: ["WUoxooII"],
+    col: 1,
+    row: 3
+  },
+  {
+    id: "WUoxooIV",
+    name: "Focus IV",
+    job: "Wave User",
+    stats: { HP:8, SP:2, TP:1, MP:8, PATK:0, PDEF:1, PHIT:1, PEVA:1, MATK:4, MDEF:3, MHIT:3, MEVA:3, FIR:0, WTR:1, AIR:2, ERT:0, LGT:3, DRK:0 },
+    requires: ["WUoxooIII"],
+    col: 1,
+    row: 4
+  },
+
+  // Column 3 (ooxo) — Summoning
+  {
+    id: "WUooxoI",
+    name: "Summoning I",
+    job: "Wave User",
+    stats: { HP:7, SP:2, TP:0, MP:7, PATK:0, PDEF:0, PHIT:1, PEVA:1, MATK:3, MDEF:1, MHIT:3, MEVA:1, FIR:1, WTR:3, AIR:2, ERT:0, LGT:1, DRK:1 },
+    requires: ["WUNovice"],
+    col: 3,
+    row: 1
+  },
+  {
+    id: "WUooxoII",
+    name: "Summoning II",
+    job: "Wave User",
+    stats: { HP:7, SP:2, TP:0, MP:8, PATK:0, PDEF:0, PHIT:1, PEVA:1, MATK:3, MDEF:1, MHIT:3, MEVA:1, FIR:1, WTR:3, AIR:2, ERT:0, LGT:1, DRK:1 },
+    requires: ["WUooxoI"],
+    col: 3,
+    row: 2
+  },
+  {
+    id: "WUooxoIII",
+    name: "Summoning III",
+    job: "Wave User",
+    stats: { HP:11, SP:3, TP:0, MP:9, PATK:0, PDEF:0, PHIT:1, PEVA:1, MATK:4, MDEF:1, MHIT:3, MEVA:1, FIR:1, WTR:3, AIR:2, ERT:0, LGT:2, DRK:1 },
+    requires: ["WUooxoII"],
+    col: 3,
+    row: 3
+  },
+  {
+    id: "WUooxoIV",
+    name: "Summoning IV",
+    job: "Wave User",
+    stats: { HP:11, SP:3, TP:0, MP:10, PATK:0, PDEF:0, PHIT:1, PEVA:1, MATK:4, MDEF:1, MHIT:3, MEVA:1, FIR:1, WTR:3, AIR:2, ERT:0, LGT:2, DRK:1 },
+    requires: ["WUooxoIII"],
+    col: 3,
+    row: 4
+  },
+
+  // Column 4 (ooox) — Elemental Studies
+  {
+    id: "WUoooxI",
+    name: "Elemental Studies I",
+    job: "Wave User",
+    stats: { HP:5, SP:2, TP:0, MP:7, PATK:0, PDEF:0, PHIT:1, PEVA:1, MATK:2, MDEF:2, MHIT:3, MEVA:1, FIR:1, WTR:2, AIR:2, ERT:1, LGT:1, DRK:1 },
+    requires: ["WUNovice"],
+    col: 4,
+    row: 1
+  },
+  {
+    id: "WUoooxII",
+    name: "Elemental Studies II",
+    job: "Wave User",
+    stats: { HP:5, SP:2, TP:0, MP:8, PATK:0, PDEF:0, PHIT:1, PEVA:1, MATK:2, MDEF:2, MHIT:3, MEVA:1, FIR:1, WTR:2, AIR:2, ERT:1, LGT:1, DRK:1 },
+    requires: ["WUoooxI"],
+    col: 4,
+    row: 2
+  },
+  {
+    id: "WUoooxIII",
+    name: "Elemental Studies III",
+    job: "Wave User",
+    stats: { HP:9, SP:3, TP:0, MP:9, PATK:0, PDEF:0, PHIT:1, PEVA:1, MATK:3, MDEF:2, MHIT:3, MEVA:1, FIR:1, WTR:2, AIR:2, ERT:1, LGT:2, DRK:1 },
+    requires: ["WUoooxII"],
+    col: 4,
+    row: 3
+  },
+  {
+    id: "WUoooxIV",
+    name: "Elemental Studies IV",
+    job: "Wave User",
+    stats: { HP:9, SP:3, TP:0, MP:10, PATK:0, PDEF:0, PHIT:1, PEVA:1, MATK:3, MDEF:2, MHIT:3, MEVA:1, FIR:1, WTR:2, AIR:2, ERT:1, LGT:2, DRK:1 },
+    requires: ["WUoooxIII"],
+    col: 4,
+    row: 4
+  },
+
+  // Master (top center)
+  {
+    id: "WUMaster",
+    name: "Master Wave User",
+    job: "Wave User",
+    stats: { HP:22, SP:8, TP:5, MP:20, PATK:1, PDEF:2, PHIT:4, PEVA:4, MATK:8, MDEF:7, MHIT:6, MEVA:5, FIR:2, WTR:4, AIR:4, ERT:1, LGT:4, DRK:1 },
+    requires: ["WUxoooIV", "WUoxooIV", "WUooxoIV", "WUoooxIV"],
+    col: 2,
+    row: 4
+  }
+];
+
+// ─────────────────────────────────────────────
+// Harvest Cleric — SWG-style 4 columns + novice + master
+// Stat order: HP SP TP MP PATK PDEF PHIT PEVA MATK MDEF MHIT MEVA FIR WTR AIR ERT LGT DRK
+// ─────────────────────────────────────────────
+
+const harvestClericTalents = [
+  // Center spine
+  {
+    id: "HCNovice",
+    name: "Novice Harvest Cleric",
+    job: "Harvest Cleric",
+    stats: { HP:18, SP:5, TP:4, MP:11, PATK:2, PDEF:2, PHIT:3, PEVA:2, MATK:4, MDEF:4, MHIT:3, MEVA:3, FIR:0, WTR:3, AIR:1, ERT:0, LGT:3, DRK:1 },
+    requires: [],
+    col: 2,
+    row: 0
+  },
+
+  // Column 1 (xooo) — Healing Magic
+  {
+    id: "HCxoooI",
+    name: "Healing Magic I",
+    job: "Harvest Cleric",
+    stats: { HP:5, SP:2, TP:0, MP:5, PATK:0, PDEF:1, PHIT:1, PEVA:0, MATK:3, MDEF:2, MHIT:2, MEVA:1, FIR:0, WTR:3, AIR:1, ERT:0, LGT:3, DRK:0 },
+    requires: ["HCNovice"],
+    col: 0,
+    row: 1
+  },
+  {
+    id: "HCxoooII",
+    name: "Healing Magic II",
+    job: "Harvest Cleric",
+    stats: { HP:5, SP:2, TP:0, MP:6, PATK:0, PDEF:1, PHIT:1, PEVA:0, MATK:3, MDEF:2, MHIT:2, MEVA:1, FIR:0, WTR:3, AIR:1, ERT:0, LGT:3, DRK:0 },
+    requires: ["HCxoooI"],
+    col: 0,
+    row: 2
+  },
+  {
+    id: "HCxoooIII",
+    name: "Healing Magic III",
+    job: "Harvest Cleric",
+    stats: { HP:9, SP:3, TP:0, MP:7, PATK:0, PDEF:1, PHIT:1, PEVA:0, MATK:4, MDEF:3, MHIT:3, MEVA:1, FIR:0, WTR:3, AIR:1, ERT:0, LGT:4, DRK:0 },
+    requires: ["HCxoooII"],
+    col: 0,
+    row: 3
+  },
+  {
+    id: "HCxoooIV",
+    name: "Healing Magic IV",
+    job: "Harvest Cleric",
+    stats: { HP:9, SP:3, TP:0, MP:8, PATK:0, PDEF:1, PHIT:1, PEVA:0, MATK:4, MDEF:3, MHIT:3, MEVA:1, FIR:0, WTR:3, AIR:1, ERT:0, LGT:4, DRK:0 },
+    requires: ["HCxoooIII"],
+    col: 0,
+    row: 4
+  },
+
+  // Column 2 (oxoo) — Light Magic
+  {
+    id: "HCoxooI",
+    name: "Light Magic I",
+    job: "Harvest Cleric",
+    stats: { HP:5, SP:2, TP:0, MP:4, PATK:1, PDEF:1, PHIT:2, PEVA:0, MATK:2, MDEF:2, MHIT:2, MEVA:1, FIR:0, WTR:2, AIR:1, ERT:0, LGT:3, DRK:0 },
+    requires: ["HCNovice"],
+    col: 1,
+    row: 1
+  },
+  {
+    id: "HCoxooII",
+    name: "Light Magic II",
+    job: "Harvest Cleric",
+    stats: { HP:5, SP:2, TP:0, MP:5, PATK:1, PDEF:1, PHIT:2, PEVA:0, MATK:3, MDEF:2, MHIT:2, MEVA:1, FIR:0, WTR:2, AIR:1, ERT:0, LGT:3, DRK:0 },
+    requires: ["HCoxooI"],
+    col: 1,
+    row: 2
+  },
+  {
+    id: "HCoxooIII",
+    name: "Light Magic III",
+    job: "Harvest Cleric",
+    stats: { HP:9, SP:3, TP:0, MP:6, PATK:1, PDEF:1, PHIT:2, PEVA:0, MATK:4, MDEF:2, MHIT:3, MEVA:1, FIR:0, WTR:2, AIR:1, ERT:0, LGT:4, DRK:0 },
+    requires: ["HCoxooII"],
+    col: 1,
+    row: 3
+  },
+  {
+    id: "HCoxooIV",
+    name: "Light Magic IV",
+    job: "Harvest Cleric",
+    stats: { HP:9, SP:3, TP:0, MP:7, PATK:1, PDEF:1, PHIT:2, PEVA:0, MATK:4, MDEF:2, MHIT:3, MEVA:1, FIR:0, WTR:2, AIR:1, ERT:0, LGT:4, DRK:0 },
+    requires: ["HCoxooIII"],
+    col: 1,
+    row: 4
+  },
+
+  // Column 3 (ooxo) — Dark Magic
+  {
+    id: "HCooxoI",
+    name: "Dark Magic I",
+    job: "Harvest Cleric",
+    stats: { HP:5, SP:2, TP:0, MP:3, PATK:1, PDEF:0, PHIT:2, PEVA:1, MATK:2, MDEF:1, MHIT:2, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:2 },
+    requires: ["HCNovice"],
+    col: 3,
+    row: 1
+  },
+  {
+    id: "HCooxoII",
+    name: "Dark Magic II",
+    job: "Harvest Cleric",
+    stats: { HP:5, SP:2, TP:0, MP:4, PATK:1, PDEF:0, PHIT:2, PEVA:1, MATK:2, MDEF:1, MHIT:2, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:2 },
+    requires: ["HCooxoI"],
+    col: 3,
+    row: 2
+  },
+  {
+    id: "HCooxoIII",
+    name: "Dark Magic III",
+    job: "Harvest Cleric",
+    stats: { HP:9, SP:3, TP:0, MP:5, PATK:1, PDEF:0, PHIT:2, PEVA:1, MATK:3, MDEF:1, MHIT:3, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:3 },
+    requires: ["HCooxoII"],
+    col: 3,
+    row: 3
+  },
+  {
+    id: "HCooxoIV",
+    name: "Dark Magic IV",
+    job: "Harvest Cleric",
+    stats: { HP:9, SP:3, TP:0, MP:6, PATK:1, PDEF:0, PHIT:2, PEVA:1, MATK:3, MDEF:1, MHIT:3, MEVA:1, FIR:0, WTR:1, AIR:1, ERT:0, LGT:0, DRK:3 },
+    requires: ["HCooxoIII"],
+    col: 3,
+    row: 4
+  },
+
+  // Column 4 (ooox) — Breathing
+  {
+    id: "HCoooxI",
+    name: "Breathing I",
+    job: "Harvest Cleric",
+    stats: { HP:7, SP:3, TP:2, MP:3, PATK:2, PDEF:1, PHIT:2, PEVA:3, MATK:1, MDEF:2, MHIT:2, MEVA:2, FIR:0, WTR:2, AIR:2, ERT:0, LGT:1, DRK:1 },
+    requires: ["HCNovice"],
+    col: 4,
+    row: 1
+  },
+  {
+    id: "HCoooxII",
+    name: "Breathing II",
+    job: "Harvest Cleric",
+    stats: { HP:7, SP:3, TP:2, MP:4, PATK:2, PDEF:1, PHIT:2, PEVA:3, MATK:1, MDEF:2, MHIT:2, MEVA:2, FIR:0, WTR:2, AIR:2, ERT:0, LGT:1, DRK:1 },
+    requires: ["HCoooxI"],
+    col: 4,
+    row: 2
+  },
+  {
+    id: "HCoooxIII",
+    name: "Breathing III",
+    job: "Harvest Cleric",
+    stats: { HP:11, SP:4, TP:3, MP:5, PATK:2, PDEF:1, PHIT:3, PEVA:3, MATK:2, MDEF:2, MHIT:2, MEVA:2, FIR:0, WTR:2, AIR:2, ERT:0, LGT:2, DRK:1 },
+    requires: ["HCoooxII"],
+    col: 4,
+    row: 3
+  },
+  {
+    id: "HCoooxIV",
+    name: "Breathing IV",
+    job: "Harvest Cleric",
+    stats: { HP:11, SP:4, TP:3, MP:6, PATK:2, PDEF:1, PHIT:3, PEVA:3, MATK:2, MDEF:2, MHIT:2, MEVA:2, FIR:0, WTR:2, AIR:2, ERT:0, LGT:2, DRK:1 },
+    requires: ["HCoooxIII"],
+    col: 4,
+    row: 4
+  },
+
+  // Master (top center)
+  {
+    id: "HCMaster",
+    name: "Master Harvest Cleric",
+    job: "Harvest Cleric",
+    stats: { HP:28, SP:8, TP:5, MP:17, PATK:3, PDEF:3, PHIT:4, PEVA:4, MATK:7, MDEF:5, MHIT:4, MEVA:4, FIR:0, WTR:4, AIR:2, ERT:0, LGT:6, DRK:2 },
+    requires: ["HCxoooIV", "HCoxooIV", "HCooxoIV", "HCoooxIV"],
+    col: 2,
+    row: 4
+  }
 ];
 
 
 const talents = [
   ...bladeBrandierTalents,
-  ...twinBladeTalents
-  // later: ...waveUserTalents, ...harvestClericTalents
+  ...twinBladeTalents,
+  ...waveUserTalents,
+  ...harvestClericTalents
+  // later: 
 ];
 
 // Quick lookup maps
