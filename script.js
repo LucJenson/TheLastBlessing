@@ -12,7 +12,7 @@ const raceMods = {
 };
 
 // placeholder until you add your 4 starting classes
-const classMods = {
+const jobMods = {
   "Starter A": {},
   "Starter B": {},
   "Starter C": {},
@@ -60,13 +60,13 @@ function updateAll() {
   const rc = document.getElementById("race").value;
   const cl = document.getElementById("job").value;
 
-  const final = sumMany(base, speciesMods[sp] ?? emptyStats(), raceMods[rc] ?? emptyStats(), classMods[cl] ?? emptyStats());
+  const final = sumMany(base, speciesMods[sp] ?? emptyStats(), raceMods[rc] ?? emptyStats(), jobMods[cl] ?? emptyStats());
   render(final);
 }
 
 function init() {
   populateSelect("species", Object.keys(speciesMods));
-  populateSelect("job", Object.keys(classMods));
+  populateSelect("job", Object.keys(jobMods));
   updateRaces();
   updateAll();
 
