@@ -89,12 +89,19 @@
           <h3 id="areaName">TownA</h3>
           <div class="hint" id="areaType">Town</div>
         
-          <div class="save-row" style="margin-top:10px;">
-            <button id="btnAccessGate">Access Gate</button>
-            <button id="btnWeaponShop">Weapon Shop</button>
-            <button id="btnArmorShop">Armor Shop</button>
-            <button id="btnItemShop">Item Shop</button>
-          </div>
+            <div class="save-row" style="margin-top:10px;">
+              <button id="btnAccessGate">Access Gate</button>
+            
+              <!-- Town-only -->
+              <button id="btnWeaponShop">Weapon Shop</button>
+              <button id="btnArmorShop">Armor Shop</button>
+              <button id="btnItemShop">Item Shop</button>
+            
+              <!-- Area-only -->
+              <button id="btnEnterArea">Enter Area</button>
+              <button id="btnNextRoom">Next Room</button>
+              <button id="btnReturnTown">Return to Town</button>
+            </div>
         
           <!-- Gate UI lives inside Area Info (collapsed by default) -->
           <div id="gatePanel" class="hidden" style="margin-top:12px;">
