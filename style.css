@@ -1,42 +1,14 @@
-body { margin: 0; font-family: system-ui, Arial, sans-serif; }
-
-.row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
-label { display: flex; flex-direction: column; gap: 6px; }
-pre { background: #f4f4f4; padding: 12px; border-radius: 8px; }
-.layout { display: grid; grid-template-columns: 1fr 360px; gap: 16px; align-items: start; }
-#tree {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(5, auto);
-  gap: 12px;
-  align-items: center;
-  justify-items: center;
-  padding: 12px;
-}
-
-.talent {
-  width: 140px;
-  min-height: 64px;
-  border: 1px solid #aaa;
-  border-radius: 8px;
-  padding: 8px;
-  text-align: center;
-  background: #fafafa;
-}
-
-.talent.active {
-  border-width: 2px;
-}
-
-.talent.locked {
-  opacity: 0.45;
-}
-
-.talent .req { font-size: 12px; opacity: 0.8; margin-top: 6px; }
-
 :root { --gap: 14px; }
 
+body {
+  margin: 0;
+  font-family: system-ui, Arial, sans-serif;
+  background: #f7f7f7;
+}
 
+/* ─────────────────────────────
+   3-panel app layout
+───────────────────────────── */
 .app {
   display: grid;
   grid-template-columns: 320px minmax(520px, 1fr) 240px;
@@ -54,22 +26,55 @@ pre { background: #f4f4f4; padding: 12px; border-radius: 8px; }
   overflow: auto;
 }
 
-.left { position: sticky; top: 0; height: calc(100vh - (2 * var(--gap))); }
-.right { position: sticky; top: 0; height: calc(100vh - (2 * var(--gap))); }
+.left, .right {
+  position: sticky;
+  top: 0;
+  height: calc(100vh - (2 * var(--gap)));
+}
 
+/* ─────────────────────────────
+   Typography
+───────────────────────────── */
 h2, h3 { margin: 6px 0 10px; }
 
-.field { display: grid; gap: 6px; margin-bottom: 10px; }
-.field label { font-size: 12px; opacity: 0.8; }
-.field input, .field select {
+pre {
+  background: #f4f4f4;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 0;
+}
+
+/* ─────────────────────────────
+   Form fields (creator + character meta)
+───────────────────────────── */
+.field {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.field label {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.field input,
+.field select {
   padding: 8px;
   border: 1px solid #bbb;
   border-radius: 8px;
 }
 
-.field.two { grid-template-columns: 1fr 1fr; gap: 10px; }
+.field.two {
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
 
-.save-row { display: flex; gap: 8px; }
+.save-row {
+  display: flex;
+  gap: 8px;
+}
+
 button {
   padding: 8px 10px;
   border: 1px solid #aaa;
@@ -77,10 +82,19 @@ button {
   background: #f6f6f6;
   cursor: pointer;
 }
+
 button:hover { filter: brightness(0.98); }
 button.danger { border-color: #b66; }
 
-.center-header { border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 10px; }
+/* ─────────────────────────────
+   Center area
+───────────────────────────── */
+.center-header {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
 .center-content { padding: 6px; }
 
 .creator-grid {
@@ -101,10 +115,17 @@ button.danger { border-color: #b66; }
   padding: 14px;
 }
 
+/* ─────────────────────────────
+   Right menu
+───────────────────────────── */
 .nav { display: grid; gap: 8px; }
 .navbtn { width: 100%; text-align: left; }
 
+/* ─────────────────────────────
+   Left stats panel
+───────────────────────────── */
 .stats-table { display: grid; gap: 6px; }
+
 .stat-row {
   display: grid;
   grid-template-columns: 54px 1fr;
@@ -114,11 +135,20 @@ button.danger { border-color: #b66; }
   border: 1px solid #eee;
   border-radius: 10px;
 }
+
 .stat-key { font-weight: 700; font-size: 12px; opacity: 0.8; }
 .stat-val { font-variant-numeric: tabular-nums; }
 
-/* keep your existing talent tree CSS if you already have it;
-   otherwise this is fine: */
+/* ─────────────────────────────
+   Talents view layout + tree
+───────────────────────────── */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 16px;
+  align-items: start;
+}
+
 #tree {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -128,6 +158,19 @@ button.danger { border-color: #b66; }
   justify-items: center;
   padding: 12px;
 }
-.talent { width: 140px; min-height: 64px; border: 1px solid #aaa; border-radius: 8px; padding: 8px; text-align: center; background: #fafafa; user-select: none; cursor: pointer; }
+
+.talent {
+  width: 140px;
+  min-height: 64px;
+  border: 1px solid #aaa;
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+  background: #fafafa;
+  user-select: none;
+  cursor: pointer;
+}
+
 .talent.active { border-width: 2px; }
 .talent.locked { opacity: 0.45; }
+.talent .req { font-size: 12px; opacity: 0.8; margin-top: 6px; }
