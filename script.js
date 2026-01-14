@@ -617,7 +617,10 @@
      const lootTier = Math.max(1, Math.floor((level + randInt(rng, 0, 2)) / 2));
    
      const areaId = `A_${seed.toString(16).padStart(8, "0")}`;
-     const name = `${mood} ${biome} (${type})`;
+     
+     const name = `${w1} ${w2} ${w3} — The ${mood} ${biome} (${type})`;
+
+     const roomList = generateRoomsForArea(seed, rooms);
    
      return {
        id: areaId,
@@ -631,6 +634,9 @@
        rooms,
        monsterTier,
        lootTier,
+        roomsTotal: rooms,
+        rooms: roomList,
+        roomIndex: 0,
        // room-by-room comes next; this is enough to "arrive"
      };
    }
@@ -642,6 +648,24 @@
      setView("area");
    }
 
+   function generateRoomsForArea(seed, roomCount) {
+     const rng = mulberry32(seed ^ 0xA5A5A5A5);
+   
+     const kinds = ["Encounter", "Chest", "Safe", "Event"];
+     const rooms = [];
+   
+     rooms.push({ index: 0, kind: "Entry" });
+   
+     for (let i = 1; i < roomCount - 1; i++) {
+       rooms.push({ index: i, kind: pick(rng, kinds) });
+     }
+   
+     rooms.push({ index: roomCount - 1, kind: "Exit" });
+   
+     return rooms;
+   }
+
+   
    // ─────────────────────────────────────────────
    // World state storage (current area)
    // ─────────────────────────────────────────────
