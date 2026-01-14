@@ -131,11 +131,24 @@ function init() {
   populateSelect("job", Object.keys(jobMods));
   updateRaces();
   updateAll();
+  renderStatsPanel();
+  saveToBrowser();
+
   document.getElementById("species").addEventListener("change", () => { updateRaces(); updateAll(); });
   document.getElementById("race").addEventListener("change", updateAll);
   document.getElementById("job").addEventListener("change", () => {
   onJobChanged();   // talent logic
   updateAll();      // stat logic
+  renderStatsPanel();
+  saveToBrowser();
+
+  hookRightMenu();
+  hookSaveButtons();
+
+  loadFromBrowser();   // tries to restore prior character state
+  renderStatsPanel();  // left panel always up to date
+
+  setView("creator");  // default center view
   });
 }
 
@@ -1047,6 +1060,8 @@ function toggleTalent(tid) {
   renderTree();
   renderTotals();
   renderPreview();
+  renderStatsPanel();
+  saveToBrowser();
 }
 
 // When job changes: auto-grant novice talent, clear other job talents
@@ -1073,3 +1088,169 @@ function onJobChanged() {
 
 init();
 
+function setView(viewKey) {
+  const title = document.getElementById("centerTitle");
+  const viewCreator = document.getElementById("viewCreator");
+  const viewTalents = document.getElementById("viewTalents");
+  const viewPlaceholder = document.getElementById("viewPlaceholder");
+  const placeholderText = document.getElementById("placeholderText");
+
+  // hide all
+  viewCreator.classList.add("hidden");
+  viewTalents.classList.add("hidden");
+  viewPlaceholder.classList.add("hidden");
+
+  if (viewKey === "back") {
+    title.textContent = "—";
+    viewPlaceholder.classList.remove("hidden");
+    placeholderText.textContent = "(cleared)";
+    return;
+  }
+
+  if (viewKey === "talents") {
+    title.textContent = "Talents";
+    viewTalents.classList.remove("hidden");
+    renderTree();
+    renderPreview();
+    return;
+  }
+
+  if (viewKey === "creator") {
+    title.textContent = "Character Creator";
+    viewCreator.classList.remove("hidden");
+    return;
+  }
+
+  // placeholders
+  title.textContent =
+    viewKey === "inventory" ? "Inventory" :
+    viewKey === "equipment" ? "Equipment" :
+    viewKey === "area" ? "Area Info" :
+    viewKey === "skills" ? "Skills / Tech / Magic" :
+    viewKey === "party" ? "Party" :
+    "—";
+
+  viewPlaceholder.classList.remove("hidden");
+  placeholderText.textContent = "(nothing here yet)";
+}
+
+function hookRightMenu() {
+  document.querySelectorAll(".navbtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.view;
+      setView(key);
+    });
+  });
+}
+function setView(viewKey) {
+  const title = document.getElementById("centerTitle");
+  const viewCreator = document.getElementById("viewCreator");
+  const viewTalents = document.getElementById("viewTalents");
+  const viewPlaceholder = document.getElementById("viewPlaceholder");
+  const placeholderText = document.getElementById("placeholderText");
+
+  // hide all
+  viewCreator.classList.add("hidden");
+  viewTalents.classList.add("hidden");
+  viewPlaceholder.classList.add("hidden");
+
+  if (viewKey === "back") {
+    title.textContent = "—";
+    viewPlaceholder.classList.remove("hidden");
+    placeholderText.textContent = "(cleared)";
+    return;
+  }
+
+  if (viewKey === "talents") {
+    title.textContent = "Talents";
+    viewTalents.classList.remove("hidden");
+    renderTree();
+    renderPreview();
+    return;
+  }
+
+  if (viewKey === "creator") {
+    title.textContent = "Character Creator";
+    viewCreator.classList.remove("hidden");
+    return;
+  }
+
+  // placeholders
+  title.textContent =
+    viewKey === "inventory" ? "Inventory" :
+    viewKey === "equipment" ? "Equipment" :
+    viewKey === "area" ? "Area Info" :
+    viewKey === "skills" ? "Skills / Tech / Magic" :
+    viewKey === "party" ? "Party" :
+    "—";
+
+  viewPlaceholder.classList.remove("hidden");
+  placeholderText.textContent = "(nothing here yet)";
+}
+
+function hookRightMenu() {
+  document.querySelectorAll(".navbtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.view;
+      setView(key);
+    });
+  });
+}
+const STORAGE_KEY = "dreamGameCharacter_v1";
+
+function saveToBrowser() {
+  const data = {
+    name: document.getElementById("charName").value ?? "",
+    level: Number(document.getElementById("charLevel").value ?? 1),
+    exp: Number(document.getElementById("charExp").value ?? 0),
+    species: document.getElementById("species").value,
+    race: document.getElementById("race").value,
+    job: document.getElementById("job").value,
+    activeTalents: [...activeTalents]
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadFromBrowser() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return false;
+
+  try {
+    const data = JSON.parse(raw);
+
+    document.getElementById("charName").value = data.name ?? "";
+    document.getElementById("charLevel").value = data.level ?? 1;
+    document.getElementById("charExp").value = data.exp ?? 0;
+
+    if (data.species) document.getElementById("species").value = data.species;
+    updateRaces(); // species affects race options
+    if (data.race) document.getElementById("race").value = data.race;
+    if (data.job) document.getElementById("job").value = data.job;
+
+    // restore talents (only those that exist)
+    activeTalents = new Set((data.activeTalents ?? []).filter(id => talentById[id]));
+    // optional: ensure novice is present if you want it forced
+    // onJobChanged();
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function hookSaveButtons() {
+  document.getElementById("btnSave").addEventListener("click", () => {
+    saveToBrowser();
+  });
+
+  document.getElementById("btnReset").addEventListener("click", () => {
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  });
+
+  // autosave on edits (optional, but feels good)
+  ["charName","charLevel","charExp","species","race","job"].forEach(id => {
+    document.getElementById(id).addEventListener("change", () => saveToBrowser());
+    document.getElementById(id).addEventListener("input", () => saveToBrowser());
+  });
+}
