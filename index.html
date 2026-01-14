@@ -85,10 +85,44 @@
           </div>
         </div>
 
-        <!-- Placeholder Views -->
-        <div id="viewPlaceholder" class="view hidden">
-          <p id="placeholderText" class="placeholder">(nothing here yet)</p>
-        </div>
+        <section id="viewPlaceholder" class="placeholder">
+          <h3 id="areaName">TownA</h3>
+          <div class="hint" id="areaType">Town</div>
+        
+          <div class="save-row" style="margin-top:10px;">
+            <button id="btnAccessGate">Access Gate</button>
+            <button id="btnWeaponShop">Weapon Shop</button>
+            <button id="btnArmorShop">Armor Shop</button>
+            <button id="btnItemShop">Item Shop</button>
+          </div>
+        
+          <!-- Gate UI lives inside Area Info (collapsed by default) -->
+          <div id="gatePanel" class="hidden" style="margin-top:12px;">
+            <h3>Gate of the Goddess</h3>
+        
+            <div class="creator-grid">
+              <div class="field">
+                <label>Keyword 1</label>
+                <input id="gateWord1" placeholder="e.g., Dusk" />
+              </div>
+              <div class="field">
+                <label>Keyword 2</label>
+                <input id="gateWord2" placeholder="e.g., Howling" />
+              </div>
+              <div class="field">
+                <label>Keyword 3</label>
+                <input id="gateWord3" placeholder="e.g., Cathedral" />
+              </div>
+            </div>
+        
+            <div class="save-row" style="margin-top:10px;">
+              <button id="btnOpenGate">Open Gate</button>
+              <button id="btnCloseGate">Close</button>
+            </div>
+        
+            <pre id="gateOutput" style="margin-top:10px;">(enter 3 keywords)</pre>
+          </div>
+        </section>
       </section>
     </main>
 
