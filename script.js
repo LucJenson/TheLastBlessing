@@ -1141,11 +1141,12 @@
     hookSaveButtons();
     hookTownButtons();
      
-    hookRoomResolveButton();
+    
     setView("creator");
 
     renderStatsPanel();
     saveToBrowser();
+    hookRoomResolveButton();
   }
 
   function el(id) {
