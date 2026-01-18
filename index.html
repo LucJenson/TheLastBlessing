@@ -139,6 +139,25 @@
               <pre id="roomLog" style="margin-top:10px;">(room log)</pre>
             </div>
           </div>
+          <!-- Area travel controls (Area only) -->
+            <div class="save-row" style="margin-top:10px;">
+              <button id="btnEnterArea" class="hidden">Enter Area</button>
+              <button id="btnNextRoom" class="hidden" disabled>Next Room</button>
+              <button id="btnReturnTown" class="hidden">Return to Town</button>
+            </div>
+            
+            <!-- Room UI (Area only) -->
+            <div id="roomCard" class="hidden" style="margin-top:12px;">
+              <h3 id="roomTitle">Room</h3>
+              <div class="hint" id="roomSubtitle">(not entered)</div>
+            
+              <div class="save-row" style="margin-top:10px;">
+                <button id="btnResolveRoom">Resolve Room</button>
+              </div>
+            
+              <pre id="roomLog" style="margin-top:10px;">(no room yet)</pre>
+            </div>
+
         </section>
       </section>
     </main>
