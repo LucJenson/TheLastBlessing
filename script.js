@@ -1446,6 +1446,38 @@
     });
   }
 
+// --- Equipment helpers (PATCH) ---
+function isEquippable(item) {
+  if (!item) return false;
+
+  // If your items have an explicit category/type:
+  // Adjust these strings to match your item schema if needed.
+  const equipTypes = ["weapon", "head", "body", "legs", "accessory"];
+
+  // Common patterns:
+  if (typeof item.equipSlot === "string") return true;      // preferred field
+  if (typeof item.slot === "string") return true;           // alternate field
+  if (typeof item.type === "string" && equipTypes.includes(item.type)) return true;
+  if (typeof item.category === "string" && item.category === "equipment") return true;
+
+  // If it has stats and isn't consumable, we can treat it as equippable:
+  if (item.stats && typeof item.stats === "object") return true;
+
+  return false;
+}
+
+function slotLabel(slotKey) {
+  const labels = {
+    weapon: "Weapon",
+    head: "Head",
+    body: "Body",
+    legs: "Legs",
+    accessory1: "Accessory 1",
+    accessory2: "Accessory 2",
+  };
+  return labels[slotKey] || slotKey;
+}
+   
 function renderInventory() {
   character = ensureEconomyFieldsOnCharacter(character);
 
