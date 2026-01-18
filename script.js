@@ -756,6 +756,53 @@
        `Loot Tier: ${currentArea.lootTier}\n\n` +
        `Progress: Room ${roomIndex + 1} / ${roomsTotal}\n` +
        `Current Room: ${room?.kind ?? "(unknown)"}`;
+
+      renderRoomCard();
+
+   }
+
+   function renderRoomCard() {
+     const title = document.getElementById("roomTitle");
+     const sub = document.getElementById("roomSubtitle");
+     const log = document.getElementById("roomLog");
+     const btn = document.getElementById("btnResolveRoom");
+   
+     if (!title || !sub || !log || !btn) return;
+   
+     if (!currentArea || currentArea.type === "Town") {
+       title.textContent = "Room";
+       sub.textContent = "(in town)";
+       log.textContent = "(no room)";
+       btn.disabled = true;
+       return;
+     }
+   
+     const idx = currentArea.roomIndex ?? 0;
+     const total = currentArea.roomsTotal ?? (currentArea.rooms?.length ?? 0);
+     const room = currentArea.rooms?.[idx];
+   
+     title.textContent = `Room ${idx + 1} / ${total}`;
+     sub.textContent = `Type: ${room?.kind ?? "(unknown)"}`;
+     btn.disabled = false;
+   
+     // Keep existing log if you want; only reset when room changes
+     if (!currentArea._lastRenderedRoom || currentArea._lastRenderedRoom !== idx) {
+       log.textContent =
+         `Entered room ${idx + 1}.\n` +
+         `This room is: ${room?.kind ?? "Unknown"}.\n`;
+       currentArea._lastRenderedRoom = idx;
+     }
+   
+     // Change button label by room kind
+     const kind = room?.kind ?? "Unknown";
+     btn.textContent =
+       kind === "Entry" ? "Step Forward" :
+       kind === "Encounter" ? "Fight" :
+       kind === "Chest" ? "Open Chest" :
+       kind === "Safe" ? "Rest" :
+       kind === "Event" ? "Investigate" :
+       kind === "Exit" ? "Leave Area" :
+       "Resolve Room";
    }
 
    
@@ -815,7 +862,7 @@
           if (!total) return;
       
           currentArea.roomIndex = Math.min((currentArea.roomIndex ?? 0) + 1, total - 1);
-      
+          currentArea._lastRenderedRoom = null; // force new log for next room
           renderAreaInfo();
           saveWorldState();
         });
@@ -863,7 +910,48 @@
      }
    }
 
+   function hookRoomResolveButton() {
+     const btn = document.getElementById("btnResolveRoom");
+     const log = document.getElementById("roomLog");
+     if (!btn || !log) return;
+   
+     btn.addEventListener("click", () => {
+       if (!currentArea || currentArea.type === "Town") return;
+   
+       const idx = currentArea.roomIndex ?? 0;
+       const room = currentArea.rooms?.[idx];
+       const kind = room?.kind ?? "Unknown";
+   
+       if (kind === "Entry") {
+         log.textContent += "\nYou steady your breath and move deeper...";
+       } else if (kind === "Encounter") {
+         log.textContent += "\n(placeholder) A monster appears! Combat soon.";
+         // Later: open combat panel, roll spawn, etc.
+       } else if (kind === "Chest") {
+         log.textContent += "\n(placeholder) You open a chest. Loot soon.";
+         // Later: loot table by lootTier
+       } else if (kind === "Safe") {
+         log.textContent += "\n(placeholder) You rest. (Later: restore HP/MP)";
+       } else if (kind === "Event") {
+         log.textContent += "\n(placeholder) Something strange happens...";
+       } else if (kind === "Exit") {
+         log.textContent += "\nYou found the exit. Returning to town...";
+         // Reuse your existing return-to-town behavior:
+         const townId = currentArea.rootTownId ?? "TownA";
+         currentArea = { id: townId, type: "Town", name: townId };
+         saveWorldState();
+         setView("area");
+         return;
+       } else {
+         log.textContent += "\n(placeholder) Nothing happens.";
+       }
+   
+       saveWorldState();
+     });
+   }
 
+
+   
   // ─────────────────────────────────────────────
   // Center views / right menu
   // ─────────────────────────────────────────────
@@ -1053,7 +1141,7 @@
     hookSaveButtons();
     hookTownButtons();
      
-
+    hookRoomResolveButton();
     setView("creator");
 
     renderStatsPanel();
