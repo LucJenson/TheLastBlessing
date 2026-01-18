@@ -1189,6 +1189,26 @@
      }
    }
 
+   function getLootPoolsForTier(lootTier) {
+     const all = Object.values(ITEMS);
+   
+     const consumables = all.filter(it => it.kind === "consumable");
+   
+     // Anything that can be equipped
+     const gear = all.filter(it =>
+       ["weapon", "armor", "accessory"].includes(it.kind)
+     );
+   
+     // Only gear up to the area’s loot tier (fallback tier=1 if missing)
+     const gearUpToTier = gear.filter(it => (it.tier ?? 1) <= lootTier);
+   
+     return { consumables, gearUpToTier };
+   }
+   
+   function pickOne(rng, arr) {
+     return arr[Math.floor(rng() * arr.length)];
+   }
+   
    function hookRoomResolveButton() {
      const btn = document.getElementById("btnResolveRoom");
      const log = document.getElementById("roomLog");
@@ -1217,13 +1237,26 @@
            renderAreaInfo();
            return;
        } else if (kind === "Chest") {
-           // Simple loot: 1 random consumable
            const seed = (currentArea.seed + (currentArea.runNonce||0) * 1337 + idx * 31) >>> 0;
            const rng = mulberry32(seed);
-           const drop = rng() < 0.5 ? ITEMS.HP_POTION_I : ITEMS.EN_TONIC_I;
+         
+           const lootTier = currentArea.lootTier ?? 1;
+           const { consumables, gearUpToTier } = getLootPoolsForTier(lootTier);
+         
+           // Chance to drop gear increases with loot tier
+           // (tier 1: 25%, tier 2: 40%, tier 3: 55%, tier 4+: 65%)
+           const gearChance = Math.min(0.25 + (lootTier - 1) * 0.15, 0.65);
+         
+           let drop;
+           if (gearUpToTier.length > 0 && rng() < gearChance) {
+             drop = pickOne(rng, gearUpToTier);
+           } else {
+             drop = pickOne(rng, consumables);
+           }
          
            addItem(drop.id, 1);
            log.textContent += `\nYou found: ${drop.name} x1`;
+         
            currentArea.roomResolved = true;
            saveWorldState();
            renderAreaInfo();
