@@ -1658,7 +1658,7 @@ function renderInventory() {
          ${rightCell}
        </div>
      `;
-   }).join("");
+   }).join("")
     : `<div class="placeholder">(Your bag is empty. Go beat up something adorable.)</div>`;
 
    invPanel.innerHTML = `
