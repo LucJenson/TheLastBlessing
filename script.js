@@ -813,6 +813,11 @@
      const btnReturn = document.getElementById("btnReturnTown");
    
      const roomCard  = document.getElementById("roomCard");
+
+     const resolveBtn = document.getElementById("resolveRoomBtn");
+     if (resolveBtn) {
+        resolveBtn.textContent = currentArea.awaitingContinue ? "Continue" : "Step Forward";
+     }
    
      if (areaName) areaName.textContent = currentArea?.name ?? "(unknown)";
      if (areaType) areaType.textContent = currentArea?.type ?? "(unknown)";
@@ -1130,10 +1135,14 @@
          
            addItem(drop.id, 1);
            log.textContent += `\nYou found: ${drop.name} x1`;
+         
            currentArea.roomResolved = true;
+         
+           // 👇 NEW: mark that the next press should advance
+           currentArea.awaitingContinue = true;
+         
            saveWorldState();
-           // Immediately reveal the next room
-           advanceToNextRoom();
+           renderAreaInfo(); // show loot + change button
            return;
        } else if (kind === "Safe") {
            const max = computeFinal();
@@ -1321,6 +1330,12 @@
       
       renderAreaInfo();
       hookRoomResolveButton();
+      if (currentArea.awaitingContinue) {
+        currentArea.awaitingContinue = false;
+        saveWorldState();
+        advanceToNextRoom();
+        return;
+      }
       return;
     }
 
@@ -1364,28 +1379,88 @@ function renderInventory() {
   if (!invPanel) return;
 
   const inv = character.inventory || {};
-  const entries = Object.entries(inv).filter(([, qty]) => Number(qty) > 0);
+  const entries = Object.entries(inv);
 
-  const rowsHtml = entries.length
-    ? entries.map(([id, qty]) => {
-        const pretty = (ITEMS?.[id]?.name) || id; // fallback if unknown item id
-        return `
-          <div class="inv-item">
-            <div class="name">${pretty}</div>
-            <div class="qty">x${qty}</div>
-          </div>
-        `;
-      }).join("")
-    : `<div class="placeholder">(Your bag is empty. Go beat up something adorable.)</div>`;
+  // Sort: equipment first, then consumables, then name
+  entries.sort(([aId], [bId]) => {
+    const a = ITEMS[aId], b = ITEMS[bId];
+    const order = { weapon: 1, armor: 2, accessory: 3, consumable: 4 };
+    const da = order[a?.kind] ?? 9;
+    const db = order[b?.kind] ?? 9;
+    if (da !== db) return da - db;
+    return (a?.name || aId).localeCompare(b?.name || bId);
+  });
+
+  const rows = entries.length
+    ? entries
+        .map(([itemId, qty]) => {
+          const item = ITEMS[itemId];
+          const name = item ? item.name : itemId;
+
+          const canEquip = item && isEquippable(item);
+          const equipBtn = canEquip
+            ? `<button class="smallbtn" data-action="equip" data-item="${itemId}">Equip</button>`
+            : "";
+          const useBtn =
+            item && item.kind === "consumable"
+              ? `<button class="smallbtn" data-action="use" data-item="${itemId}">Use</button>`
+              : "";
+
+          const rightCell =
+            equipBtn || useBtn
+              ? `<div class="actions"><span class="qty">${qty}</span>${useBtn}${equipBtn}</div>`
+              : `<div class="qty">${qty}</div>`;
+
+          return `
+            <div class="inv-row">
+              <div class="name">${name}</div>
+              ${rightCell}
+            </div>
+          `;
+        })
+        .join("")
+    : `<div class="hint">(Your bag is empty.)</div>`;
 
   invPanel.innerHTML = `
     <div class="inv-header">
-      <div class="hint">Items you've collected (saved to browser)</div>
+      <div class="hint">Inventory</div>
       <div class="inv-gil">GIL: ${character.gil ?? 0}</div>
     </div>
-    <div class="inv-list">${rowsHtml}</div>
+
+    <div class="inv-list">
+      ${rows}
+    </div>
   `;
+
+  // Bind once (event delegation)
+  if (invPanel.dataset.bound !== "1") {
+    invPanel.dataset.bound = "1";
+    invPanel.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+
+      const action = btn.dataset.action;
+      const itemId = btn.dataset.item;
+      if (!action || !itemId) return;
+
+      if (action === "equip") {
+        equipItem(itemId);
+      } else if (action === "use") {
+        // placeholder: consume later (you said not a priority)
+        const it = ITEMS?.[itemId];
+        const nm = it?.name ?? itemId;
+        const log = document.getElementById("roomLog");
+        if (log) log.textContent += `\n(Consumables not implemented yet) Tried to use: ${nm}`;
+      }
+
+      renderInventory();
+      if (currentView === "equipment") renderEquipment();
+      renderStatsPanel();
+      saveToBrowser();
+    });
+  }
 }
+
 
    
   // ─────────────────────────────────────────────
