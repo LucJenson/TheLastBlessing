@@ -47,7 +47,7 @@
     MATK:15, MDEF:10, MHIT:95, MEVA:5,
     FIR:0, WTR:0, AIR:0, ERT:0, LGT:0, DRK:0
   };
-   
+
   const speciesMods = {
     Human: { HP:0, SP:5, TP:5, MP:0, PATK:1, PDEF:1, PHIT:1, PEVA:1, MATK:1, MDEF:1, MHIT:1, MEVA:1, FIR:0, WTR:0, AIR:0, ERT:0, LGT:0, DRK:0 },
     Elf:   { HP:-10, SP:0, TP:-5, MP:20, PATK:-2, PDEF:-2, PHIT:3, PEVA:3, MATK:4, MDEF:3, MHIT:4, MEVA:4, FIR:0, WTR:2, AIR:2, ERT:0, LGT:3, DRK:0 },
@@ -68,14 +68,6 @@
     Wyld: { species:"Beast", HP:5,  SP:5, TP:0, MP:0,  PATK:3, PDEF:-1, PHIT:0, PEVA:2, MATK:0, MDEF:0, MHIT:0, MEVA:0, FIR:1, WTR:0, AIR:0, ERT:0, LGT:0, DRK:3 }
   };
 
-   const RARITIES = {
-     COMMON:     { key: "COMMON",     name: "Common",     mult: 1.0,  color: "#bbb" },
-     UNCOMMON:   { key: "UNCOMMON",   name: "Uncommon",   mult: 1.2,  color: "#4caf50" },
-     RARE:       { key: "RARE",       name: "Rare",       mult: 1.5,  color: "#2196f3" },
-     LEGENDARY:  { key: "LEGENDARY",  name: "Legendary",  mult: 1.8,  color: "#ff9800" },
-     MYTHIC:     { key: "MYTHIC",     name: "Mythic",     mult: 2.0,  color: "#e91e63" }
-   };
-   
   function emptyStats() {
     return Object.fromEntries(STATS.map(s => [s, 0]));
   }
@@ -88,53 +80,12 @@
       gil: 0,
       inventory: {}
     };
+
    //ITEM TABLES
-   // NOTE: Inventory uses item IDs; some items are equippable.
-   // For now, equipping does NOT consume the item (it just marks it equipped).
    const ITEMS = {
-     // Consumables
-     HP_POTION_I: {
-       id: "HP_POTION_I",
-       name: "Health Potion I",
-       kind: "consumable",
-       tier: 1
-     },
-     EN_TONIC_I: {
-       id: "EN_TONIC_I",
-       name: "Energy Tonic I",
-       kind: "consumable",
-       tier: 1
-     },
-
-     // Weapons (starter examples)
-     RUSTY_SWORD: {
-       id: "RUSTY_SWORD", name: "Rusty Sword", kind: "weapon",
-       slot: "weapon", tier: 1, weaponType: "Sword", damageType: "Slash",
-       stats: { PATK: 2, PHIT: 1 }
-     },
-     TRAINING_DAGGER: {
-       id: "TRAINING_DAGGER", name: "Training Dagger", kind: "weapon",
-       slot: "weapon", tier: 1, weaponType: "Dagger", damageType: "Pierce",
-       stats: { PATK: 1, PEVA: 1, PHIT: 1 }
-     },
-
-     // Armor (starter examples)
-     CLOTH_CAP: { id: "CLOTH_CAP", name: "Cloth Cap", kind: "armor", slot: "head", tier: 1, stats: { HP: 2, PDEF: 1 } },
-     LEATHER_VEST: { id: "LEATHER_VEST", name: "Leather Vest", kind: "armor", slot: "body", tier: 1, stats: { HP: 4, PDEF: 2 } },
-     IRON_GREAVES: { id: "IRON_GREAVES", name: "Iron Greaves", kind: "armor", slot: "legs", tier: 1, stats: { HP: 3, PDEF: 2, PEVA: -1 } },
-
-     // Accessories
-     COPPER_RING: { id: "COPPER_RING", name: "Copper Ring", kind: "accessory", slot: "accessory1", tier: 1, stats: { PHIT: 1, MHIT: 1 } },
+     HP_POTION_I: { id: "HP_POTION_I", name: "Health Potion I" },
+     EN_TONIC_I: { id: "EN_TONIC_I", name: "Energy Tonic I" },
    };
-
-   const EQUIPMENT_SLOTS = [
-     { key: "weapon", label: "Weapon" },
-     { key: "head", label: "Head" },
-     { key: "body", label: "Body" },
-     { key: "legs", label: "Legs" },
-     { key: "accessory1", label: "Accessory 1" },
-     { key: "accessory2", label: "Accessory 2" },
-   ];
 
    //MONSTER TABLES
    const MONSTERS = [
@@ -167,9 +118,6 @@
     return objs.reduce((acc, o) => add(acc, o), emptyStats());
   }
 
-
-
-   
   // ─────────────────────────────────────────────
   // Talent data
   // ─────────────────────────────────────────────
@@ -487,56 +435,6 @@
     return total;
   }
 
-   // --- Equipment safety helper ---
-function ensureEquipmentFieldsOnCharacter(ch) {
-  if (!ch || typeof ch !== "object") ch = {};
-
-  if (!ch.equipment || typeof ch.equipment !== "object") {
-    ch.equipment = {
-      weapon: null,
-      head: null,
-      body: null,
-      legs: null,
-      accessory1: null,
-      accessory2: null
-    };
-  } else {
-    // ensure all slots exist
-    for (const s of ["weapon","head","body","legs","accessory1","accessory2"]) {
-      if (!(s in ch.equipment)) ch.equipment[s] = null;
-    }
-  }
-
-  if (!ch.expPools || typeof ch.expPools !== "object") ch.expPools = {};
-  if (!ch.expPools.weapon || typeof ch.expPools.weapon !== "object") ch.expPools.weapon = {};
-  if (!ch.expPools.damage || typeof ch.expPools.damage !== "object") ch.expPools.damage = {};
-
-  return ch;
-}
-
-
-function sumEquipmentStats() {
-  character = ensureEquipmentFieldsOnCharacter(character);
-
-  const eq = character.equipment;
-  if (!eq) return emptyStats();
-
-  let total = emptyStats();
-
-  for (const slot of EQUIPMENT_SLOTS) {
-    const id = eq[slot.key];            // <-- FIX: use slot.key
-    if (!id) continue;
-
-    const item = ITEMS[id];
-    if (!item || !item.stats) continue;
-
-    total = add(total, item.stats);
-  }
-
-  return total;
-}
-
-
   function computeFinal() {
     const sp = el("species").value;
     const rc = el("race").value;
@@ -548,8 +446,7 @@ function sumEquipmentStats() {
     );
 
     const talentLayer = sumTalentStats();
-    const equipmentLayer = sumEquipmentStats();
-    return sumMany(baseLayer, talentLayer, equipmentLayer);
+    return add(baseLayer, talentLayer);
   }
 
   // ─────────────────────────────────────────────
@@ -788,18 +685,13 @@ function sumEquipmentStats() {
    
    function travelToArea(areaObj) {
      currentArea = areaObj;
-   
+     saveWorldState();
+
      // entering a new area: not entered yet, room not resolved
      currentArea.entered = false;
      currentArea.roomIndex = currentArea.roomIndex ?? 0;
      currentArea.roomResolved = false;
-   
-     // ✅ increment ON ENTER (after flags)
-     currentArea.runNonce = (currentArea.runNonce || 0) + 1;
-   
-     // ✅ save after the change
-     saveWorldState();
-   
+     // Automatically show Area Info when you travel
      setView("area");
      renderAreaInfo();
    }
@@ -853,18 +745,7 @@ function sumEquipmentStats() {
      for (const k of ["HP", "MP", "SP", "TP"]) {
        if (typeof ch.cur[k] !== "number") ch.cur[k] = null; // null = “not initialized yet”
      }
-
-     // Equipment (item ids by slot)
-     if (!ch.equipment || typeof ch.equipment !== "object") ch.equipment = {};
-      for (const slot of EQUIPMENT_SLOTS) {
-        if (typeof ch.equipment[slot.key] !== "string") ch.equipment[slot.key] = null;
-      }
-
-     // Experience pools used for talent purchasing later
-     if (!ch.expPools || typeof ch.expPools !== "object") ch.expPools = {};
-     if (!ch.expPools.weapon || typeof ch.expPools.weapon !== "object") ch.expPools.weapon = {};
-     if (!ch.expPools.damage || typeof ch.expPools.damage !== "object") ch.expPools.damage = {};
-
+   
      return ch;
    }
 
@@ -904,67 +785,6 @@ function sumEquipmentStats() {
      saveToBrowser();
       if (currentView === "inventory") renderInventory();
 
-   }
-
-   function equipItem(itemId) {
-     character = ensureEconomyFieldsOnCharacter(character);
-     const it = ITEMS?.[itemId];
-     if (!it || !it.slot) return false;
-
-     // Must own at least 1
-     if ((character.inventory?.[itemId] ?? 0) <= 0) return false;
-
-     const slot = it.slot;
-     character.equipment[slot] = itemId;
-
-     saveToBrowser();
-     renderStatsPanel();
-     if (currentView === "inventory") renderInventory();
-     if (currentView === "equipment") renderEquipment();
-     return true;
-   }
-
-   function unequipSlot(slot) {
-     character = ensureEconomyFieldsOnCharacter(character);
-     if (!slot) return false;
-     character.equipment[slot] = null;
-
-     saveToBrowser();
-     renderStatsPanel();
-     if (currentView === "inventory") renderInventory();
-     if (currentView === "equipment") renderEquipment();
-     return true;
-   }
-
-   function addPoolXP(kind, key, amount) {
-     character = ensureEconomyFieldsOnCharacter(character);
-     if (!kind || !key) return;
-     const bucket = character.expPools?.[kind];
-     if (!bucket) return;
-     bucket[key] = (bucket[key] || 0) + Math.max(0, Math.floor(amount));
-     saveToBrowser();
-     if (currentView === "equipment") renderEquipment();
-   }
-
-   function gainCombatXPFromWeapon(amount) {
-     character = ensureEconomyFieldsOnCharacter(character);
-     const weaponId = character.equipment?.weapon || null;
-     const w = weaponId ? ITEMS?.[weaponId] : null;
-     const weaponType = w?.weaponType || "Unarmed";
-     const damageType = w?.damageType || "Blunt";
-
-     // Split XP into two pools (tweak later)
-     const amt = Math.max(1, Math.floor(amount));
-     addPoolXP('weapon', weaponType, amt);
-     addPoolXP('damage', damageType, amt);
-   }
-
-   function awardCombatXP(monster) {
-     // Simple XP formula for now: 5 XP per tier.
-     // You can replace this later with: XP = floor(damage dealt) or XP = monster.expValue, etc.
-     const tier = Number(monster?.tier ?? 1);
-     const amt = Math.max(1, 5 * tier);
-     gainCombatXPFromWeapon(amt);
    }
    
   // ─────────────────────────────────────────────
@@ -1019,8 +839,12 @@ function sumEquipmentStats() {
      if (btnGate) btnGate.classList.add("hidden");
      [btnWeapon, btnArmor, btnItem].forEach(b => b && b.classList.add("hidden"));
    
-     // Return to town is always available in an area
-     if (btnReturn) btnReturn.classList.remove("hidden");
+    // Return to town is available in an area UNLESS you're in combat.
+    // Push-your-luck: once you step into a fight, you can't bail without losing.
+    if (btnReturn) {
+      const inFight = !!currentArea.currentEncounter;
+      btnReturn.classList.toggle("hidden", inFight);
+    }
    
      // If not entered yet: show Enter Area only
      if (!currentArea.entered) {
@@ -1038,13 +862,10 @@ function sumEquipmentStats() {
        return;
      }
    
-     // Entered: show Next Room + Room Card
-     if (btnEnter) btnEnter.classList.add("hidden");
-     if (btnNext) btnNext.classList.remove("hidden");
-     if (roomCard) roomCard.classList.remove("hidden");
-   
-     // Next Room disabled until current room is resolved
-     if (btnNext) btnNext.disabled = !currentArea.roomResolved;
+    // Entered: show Room Card. "Next Room" is now automatic via Resolve actions.
+    if (btnEnter) btnEnter.classList.add("hidden");
+    if (btnNext) btnNext.classList.add("hidden");
+    if (roomCard) roomCard.classList.remove("hidden");
    
      // Show area + room status
      if (gateOutput) {
@@ -1248,26 +1069,27 @@ function sumEquipmentStats() {
      }
    }
 
-   function getLootPoolsForTier(lootTier) {
-     const all = Object.values(ITEMS);
-   
-     const consumables = all.filter(it => it.kind === "consumable");
-   
-     // Anything that can be equipped
-     const gear = all.filter(it =>
-       ["weapon", "armor", "accessory"].includes(it.kind)
-     );
-   
-     // Only gear up to the area’s loot tier (fallback tier=1 if missing)
-     const gearUpToTier = gear.filter(it => (it.tier ?? 1) <= lootTier);
-   
-     return { consumables, gearUpToTier };
-   }
-   
-   function pickOne(rng, arr) {
-     return arr[Math.floor(rng() * arr.length)];
-   }
-   
+    // Advances to the next room immediately (no manual "Next Room" click).
+    // Safe-guarded so it won't move during combat or past the final room.
+    function advanceToNextRoom() {
+      if (!currentArea || currentArea.type === "Town") return;
+      if (!currentArea.entered) return;
+      if (currentArea.currentEncounter) return; // never auto-advance mid-fight
+
+      const total = currentArea.roomsTotal ?? (currentArea.rooms?.length ?? 0);
+      if (!total) return;
+
+      const idx = currentArea.roomIndex ?? 0;
+      if (idx >= total - 1) return; // already at last room
+
+      currentArea.roomIndex = Math.min(idx + 1, total - 1);
+      currentArea.roomResolved = false;
+      currentArea._lastRenderedRoom = null;
+
+      saveWorldState();
+      renderAreaInfo();
+    }
+
    function hookRoomResolveButton() {
      const btn = document.getElementById("btnResolveRoom");
      const log = document.getElementById("roomLog");
@@ -1286,6 +1108,11 @@ function sumEquipmentStats() {
    
        if (kind === "Entry") {
          log.textContent += "\nYou steady your breath and move deeper...";
+         currentArea.roomResolved = true;
+         saveWorldState();
+         // Immediately reveal the next room
+         advanceToNextRoom();
+         return;
        } else if (kind === "Encounter") {
            // Start fight (room not resolved until monster dies or flee)
            const m = spawnMonsterForRoom(currentArea, idx);
@@ -1296,40 +1123,17 @@ function sumEquipmentStats() {
            renderAreaInfo();
            return;
        } else if (kind === "Chest") {
-           const baseSeed = (typeof currentArea.seed === "number")
-              ? (currentArea.seed >>> 0)
-              : hashStringToUint(String(currentArea.seed || ""));
-            
-            const seed =
-              (baseSeed +
-               (currentArea.runNonce || 0) * 100000 +
-               idx * 31) >>> 0;
-            
-            const rng = mulberry32(seed);
+           // Simple loot: 1 random consumable
+           const seed = (currentArea.seed + (currentArea.runNonce||0) * 1337 + idx * 31) >>> 0;
+           const rng = mulberry32(seed);
+           const drop = rng() < 0.5 ? ITEMS.HP_POTION_I : ITEMS.EN_TONIC_I;
          
-           const lootTier = currentArea.lootTier ?? 1;
-           const { consumables, gearUpToTier } = getLootPoolsForTier(lootTier);
-
-
-          
-           // Chance to drop gear increases with loot tier
-           // (tier 1: 25%, tier 2: 40%, tier 3: 55%, tier 4+: 65%)
-           const gearChance = Math.min(0.25 + (lootTier - 1) * 0.15, 0.65);
-         
-           let drop;
-           if (gearUpToTier.length > 0 && rng() < gearChance) {
-             drop = pickOne(rng, gearUpToTier);
-           } else {
-             drop = pickOne(rng, consumables);
-           }
-
-           const rarity = rollRarity(rng, lootTier);
-           addItem(drop.id, 1, rarity);
-           log.textContent += `\nYou found: ${rarity} ${drop.name} x1`;
-         
+           addItem(drop.id, 1);
+           log.textContent += `\nYou found: ${drop.name} x1`;
            currentArea.roomResolved = true;
            saveWorldState();
-           renderAreaInfo();
+           // Immediately reveal the next room
+           advanceToNextRoom();
            return;
        } else if (kind === "Safe") {
            const max = computeFinal();
@@ -1358,19 +1162,11 @@ function sumEquipmentStats() {
        }
       currentArea.roomResolved = true;
       saveWorldState();
-      renderAreaInfo();
+      // Immediately reveal the next room (unless Exit handled above)
+      advanceToNextRoom();
      });
    }
 
-   function hashStringToUint(str) {
-     let h = 2166136261 >>> 0;
-     for (let i = 0; i < str.length; i++) {
-       h ^= str.charCodeAt(i);
-       h = Math.imul(h, 16777619);
-     }
-     return h >>> 0;
-   }
-   
    function hookEncounterButtons() {
      const atk = document.getElementById("btnAttack");
      const flee = document.getElementById("btnFlee");
@@ -1399,14 +1195,12 @@ function sumEquipmentStats() {
          const gil = randInt(mulberry32((currentArea.seed + (currentArea.runNonce||0) + (currentArea.roomIndex||0))>>>0), enc.monster.gilMin, enc.monster.gilMax);
          addGil(gil);
          log.textContent += `\n${enc.monster.name} defeated! +${gil} GIL`;
-
-         // Award XP pools for weapon + damage types (used later for talent purchases)
-         awardCombatXP(enc.monster);
    
          currentArea.currentEncounter = null;
          currentArea.roomResolved = true;
          saveWorldState();
-         renderAreaInfo();
+         // Immediately reveal the next room
+         advanceToNextRoom();
          return;
        }
    
@@ -1420,64 +1214,60 @@ function sumEquipmentStats() {
          
          log.textContent += `\n${enc.monster.name} hits you for ${mdmg}. (HP ${character.cur.HP}/${p.HP})`;
          
-         if (character.cur.HP <= 0) {
-           log.textContent += `\nYou were knocked out… returning to TownA.`;
-         
-           // Restore on knockout (for now)
-           const townId = currentArea.rootTownId ?? "TownA";
-           currentArea = { id: townId, type: "Town", name: townId };
-           syncCurrentResourcesToMax({ fillMissing: true }); // clamps, doesn't restore
-           // Full restore on KO:
-           character.cur.HP = p.HP;
-           character.cur.MP = p.MP;
-           character.cur.SP = p.SP;
-           character.cur.TP = p.TP;
-           saveToBrowser();
-         
-           saveWorldState();
-           setView("area");
-         }
+        if (character.cur.HP <= 0) {
+          character = ensureEconomyFieldsOnCharacter(character);
+
+          const KO_COST = 100;
+          const before = character.gil ?? 0;
+          character.gil = Math.max(0, before - KO_COST);
+
+          log.textContent += `\nYou were knocked out… (-${KO_COST} GIL) Returning to town.`;
+
+          const townId = currentArea.rootTownId ?? "TownA";
+          currentArea = { id: townId, type: "Town", name: townId };
+
+          // Full restore on KO (for now)
+          syncCurrentResourcesToMax({ fillMissing: true });
+          character.cur.HP = p.HP;
+          character.cur.MP = p.MP;
+          character.cur.SP = p.SP;
+          character.cur.TP = p.TP;
+          saveToBrowser();
+
+          saveWorldState();
+          setView("area");
+        }
 
      });
    
      flee.addEventListener("click", () => {
        if (!currentArea?.currentEncounter) return;
-       log.textContent += `\nYou flee back to the previous path. (placeholder)`;
-       currentArea.currentEncounter = null;
-       // Treat flee as "resolved" so you can move on, or keep it unresolved if you want pressure.
-       currentArea.roomResolved = true;
-       saveWorldState();
-       renderAreaInfo();
+      // Push-your-luck: fleeing counts as a knockout.
+      const p = computeFinal();
+      character = ensureEconomyFieldsOnCharacter(character);
+      const KO_COST = 100;
+      const before = character.gil ?? 0;
+      character.gil = Math.max(0, before - KO_COST);
+
+      log.textContent += `\nYou try to flee... but you're brought down. (-${KO_COST} GIL) Returning to town.`;
+
+      currentArea.currentEncounter = null;
+      const townId = currentArea.rootTownId ?? "TownA";
+      currentArea = { id: townId, type: "Town", name: townId };
+
+      // Full restore on KO (for now)
+      syncCurrentResourcesToMax({ fillMissing: true });
+      character.cur.HP = p.HP;
+      character.cur.MP = p.MP;
+      character.cur.SP = p.SP;
+      character.cur.TP = p.TP;
+      saveToBrowser();
+
+      saveWorldState();
+      setView("area");
      });
    }
 
-   function getItemWithRarity(item, rarityKey) {
-     const rarity = RARITIES[rarityKey] || RARITIES.COMMON;
-   
-     if (!item.stats) return item;
-   
-     const scaledStats = {};
-     for (const [k, v] of Object.entries(item.stats)) {
-       scaledStats[k] = Math.round(v * rarity.mult);
-     }
-   
-     return {
-       ...item,
-       rarity: rarityKey,
-       stats: scaledStats
-     };
-   }
-
-   function rollRarity(rng, lootTier) {
-     const roll = rng();
-   
-     if (lootTier >= 4 && roll < 0.02) return "MYTHIC";
-     if (lootTier >= 3 && roll < 0.07) return "LEGENDARY";
-     if (lootTier >= 2 && roll < 0.18) return "RARE";
-     if (roll < 0.45) return "UNCOMMON";
-   
-     return "COMMON";
-   }
 
    
   // ─────────────────────────────────────────────
@@ -1490,7 +1280,6 @@ function sumEquipmentStats() {
     const viewPlaceholder = el("viewPlaceholder");
     const areaPanel = document.getElementById("areaPanel");
     const inventoryPanel = document.getElementById("inventoryPanel");
-    const equipmentPanel = document.getElementById("equipmentPanel");
     // placeholderText is now OPTIONAL (may not exist in your new Area panel)
     const placeholderText = document.getElementById("placeholderText");
 
@@ -1501,7 +1290,6 @@ function sumEquipmentStats() {
 
     if (areaPanel) areaPanel.classList.add("hidden");
     if (inventoryPanel) inventoryPanel.classList.add("hidden");
-    if (equipmentPanel) equipmentPanel.classList.add("hidden");
      
     if (viewKey === "back") {
       title.textContent = "—";
@@ -1529,7 +1317,6 @@ function sumEquipmentStats() {
       viewPlaceholder.classList.remove("hidden");
 
       if (inventoryPanel) inventoryPanel.classList.add("hidden");
-      if (equipmentPanel) equipmentPanel.classList.add("hidden");
       if (areaPanel) areaPanel.classList.remove("hidden");
       
       renderAreaInfo();
@@ -1543,24 +1330,9 @@ function sumEquipmentStats() {
         viewPlaceholder.classList.remove("hidden");
       
         if (areaPanel) areaPanel.classList.add("hidden");
-        if (equipmentPanel) equipmentPanel.classList.add("hidden");
         if (inventoryPanel) inventoryPanel.classList.remove("hidden");
       
         renderInventory();
-        return;
-    }
-
-
-    if (viewKey === "equipment") {
-        currentView = "equipment";
-        title.textContent = "Equipment";
-        viewPlaceholder.classList.remove("hidden");
-
-        if (areaPanel) areaPanel.classList.add("hidden");
-        if (inventoryPanel) inventoryPanel.classList.add("hidden");
-        if (equipmentPanel) equipmentPanel.classList.remove("hidden");
-
-        renderEquipment();
         return;
     }
 
@@ -1585,207 +1357,37 @@ function sumEquipmentStats() {
     });
   }
 
-// --- Equipment helpers (PATCH) ---
-function isEquippable(item) {
-  if (!item) return false;
-
-  // If your items have an explicit category/type:
-  // Adjust these strings to match your item schema if needed.
-  const equipTypes = ["weapon", "head", "body", "legs", "accessory"];
-
-  // Common patterns:
-  if (typeof item.equipSlot === "string") return true;      // preferred field
-  if (typeof item.slot === "string") return true;           // alternate field
-  if (typeof item.type === "string" && equipTypes.includes(item.type)) return true;
-  if (typeof item.category === "string" && item.category === "equipment") return true;
-
-  // If it has stats and isn't consumable, we can treat it as equippable:
-  if (item.stats && typeof item.stats === "object") return true;
-
-  return false;
-}
-
-function slotLabel(slotKey) {
-  const labels = {
-    weapon: "Weapon",
-    head: "Head",
-    body: "Body",
-    legs: "Legs",
-    accessory1: "Accessory 1",
-    accessory2: "Accessory 2",
-  };
-  return labels[slotKey] || slotKey;
-}
-   
 function renderInventory() {
   character = ensureEconomyFieldsOnCharacter(character);
 
-  const invPanel = document.getElementById('inventoryPanel');
+  const invPanel = document.getElementById("inventoryPanel");
   if (!invPanel) return;
 
   const inv = character.inventory || {};
-   const entries = Object.entries(inv);
-   
-   // Optional: nicer sorting (equipment first, then consumables, then name)
-   entries.sort(([aId], [bId]) => {
-     const a = ITEMS[aId], b = ITEMS[bId];
-     const aKind = a?.kind || "zzz";
-     const bKind = b?.kind || "zzz";
-     const order = { weapon: 1, armor: 2, accessory: 3, consumable: 4 };
-     const da = order[aKind] ?? 9;
-     const db = order[bKind] ?? 9;
-     if (da !== db) return da - db;
-     return (a?.name || aId).localeCompare(b?.name || bId);
-   });
-   
-   const rows = entries.map(([itemId, qty]) => {
-     const item = ITEMS[itemId];
-     const name = item ? item.name : itemId;
-   
-     // Decide which buttons to show
-     const canEquip = item && isEquippable(item);
-     const equipBtn = canEquip ? `<button class="smallbtn" data-action="equip" data-item="${itemId}">Equip</button>` : "";
-     const useBtn = (item && item.kind === "consumable") ? `<button class="smallbtn" data-action="use" data-item="${itemId}">Use</button>` : "";
-   
-     // If we have buttons, put qty + buttons together in .actions
-     const rightCell = (equipBtn || useBtn)
-       ? `<div class="actions"><span class="qty">${qty}</span>${useBtn}${equipBtn}</div>`
-       : `<div class="qty">${qty}</div>`;
-   
-     return `
-       <div class="inv-row">
-         <div class="name">${name}</div>
-         ${rightCell}
-       </div>
-     `;
-   }).join("");
+  const entries = Object.entries(inv).filter(([, qty]) => Number(qty) > 0);
 
-   invPanel.innerHTML = `
-     <div class="inv-header">
-       <div class="hint">Inventory</div>
-       <div class="inv-gil">GIL: ${character.gil ?? 0}</div>
-     </div>
-   
-     <div class="inv-list">
-       ${rows || `<div class="hint">(empty)</div>`}
-     </div>
-   `;
+  const rowsHtml = entries.length
+    ? entries.map(([id, qty]) => {
+        const pretty = (ITEMS?.[id]?.name) || id; // fallback if unknown item id
+        return `
+          <div class="inv-item">
+            <div class="name">${pretty}</div>
+            <div class="qty">x${qty}</div>
+          </div>
+        `;
+      }).join("")
+    : `<div class="placeholder">(Your bag is empty. Go beat up something adorable.)</div>`;
 
-  // One-time event delegation for Equip/Unequip
-  if (invPanel.dataset.bound !== '1') {
-    invPanel.dataset.bound = '1';
-    invPanel.addEventListener('click', (e) => {
-      const btn = e.target?.closest?.('[data-inv-action]');
-      if (!btn) return;
-      const action = btn.dataset.invAction;
-      const itemId = btn.dataset.itemId;
-      if (!action || !itemId) return;
-
-      if (action === 'equip') {
-        equipItem(itemId);
-      } else if (action === 'unequip') {
-        const it = ITEMS?.[itemId];
-        if (it?.slot) unequipSlot(it.slot);
-      }
-
-
-      // refresh panels
-      renderInventory();
-      if (currentView === 'equipment') renderEquipment();
-      renderStatsPanel();
-      saveToBrowser();
-    });
-  }
-}
-
-   
-
-function renderEquipment() {
-  character = ensureEconomyFieldsOnCharacter(character);
-
-  const eqPanel = document.getElementById('equipmentPanel');
-  if (!eqPanel) return;
-
-  const eq = character.equipment || {};
-
-   const slotRows = EQUIPMENT_SLOTS.map((slot) => {
-     const id = eq[slot.key];                    // <-- FIX
-     const item = id ? ITEMS[id] : null;
-     const name = item ? item.name : '(empty)';
-     const btn = id
-       ? `<button class="smallbtn" data-action="unequip" data-slot="${slot.key}">Unequip</button>`
-       : `<span class="hint">&nbsp;</span>`;
-   
-     return `
-       <div class="eq-slot">
-         <div class="slot">${slotLabel(slot.key)}</div>
-         <div class="name">${name}</div>
-         <div class="actions">${btn}</div>
-       </div>
-     `;
-   }).join('');
-
-  const wp = character.expPools?.weapon || {};
-  const dp = character.expPools?.damage || {};
-  const wpRows = Object.keys(wp).length
-     ? Object.entries(wp)
-         .map(([k, v]) => `
-           <div class="exp-row">
-             <span class="exp-label">${k}</span>
-             <span class="exp-value">${Math.floor(v)}</span>
-           </div>
-         `)
-         .join("")
-        : `<div class="hint">(no weapon XP yet)</div>`;
-   
-   const dpRows = Object.keys(dp).length
-     ? Object.entries(dp)
-         .map(([k, v]) => `
-           <div class="exp-row">
-             <span class="exp-label">${k}</span>
-             <span class="exp-value">${Math.floor(v)}</span>
-           </div>
-         `)
-         .join("")
-     : `<div class="hint">(no damage-type XP yet)</div>`;
-
-  eqPanel.innerHTML = `
+  invPanel.innerHTML = `
     <div class="inv-header">
-      <div class="hint">What you're wearing / wielding</div>
+      <div class="hint">Items you've collected (saved to browser)</div>
       <div class="inv-gil">GIL: ${character.gil ?? 0}</div>
     </div>
-
-    <div class="eq-grid">${slotRows}</div>
-
-    <h3 style="margin-top:14px;">Experience Pools</h3>
-    <div class="eq-exp">
-      <div>
-        <div class="hint" style="margin-bottom:6px;">Weapon Types</div>
-        ${wpRows}
-      </div>
-      <div>
-        <div class="hint" style="margin-bottom:6px;">Damage Types</div>
-        ${dpRows}
-      </div>
-    </div>
+    <div class="inv-list">${rowsHtml}</div>
   `;
-
-  if (!eqPanel.dataset.bound) {
-    eqPanel.addEventListener('click', (e) => {
-      const btn = e.target.closest('button');
-      if (!btn) return;
-      const action = btn.dataset.action;
-      if (action === 'unequip') {
-        const slot = btn.dataset.slot;
-        if (!slot) return;
-        unequipSlot(slot);
-        renderEquipment();
-        renderStatsPanel();
-      }
-    });
-    eqPanel.dataset.bound = '1';
-  }
 }
+
+   
   // ─────────────────────────────────────────────
   // Storage
   // ─────────────────────────────────────────────
@@ -1810,8 +1412,6 @@ function renderEquipment() {
        gil: character.gil,
        inventory: character.inventory,
        cur: character.cur, // <-- save current resources
-       equipment: character.equipment,
-       expPools: character.expPools,
    
        species: el("species").value,
        race: el("race").value,
@@ -1837,9 +1437,7 @@ function renderEquipment() {
          exp: data.exp ?? 0,
          gil: data.gil,
          inventory: data.inventory,
-         cur: data.cur,
-         equipment: data.equipment,
-         expPools: data.expPools
+         cur: data.cur // may be undefined; ensure function handles it
        });
 
    
