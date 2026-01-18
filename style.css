@@ -250,11 +250,21 @@ button.danger { border-color: #b66; }
 }
 .exp-row{
   display:grid;
-  grid-template-columns:1fr auto;
+  grid-template-columns: 1fr min-content;
   gap:10px;
   align-items:center;
   padding:6px 8px;
   border:1px solid #eee;
   border-radius:10px;
   background:#fff;
+}
+.eq-exp{
+  display: grid;
+  grid-template-columns: max-content max-content;
+  gap: 24px;
+  align-items: start;
+}
+
+.eq-exp > div{
+  width: max-content;
 }
