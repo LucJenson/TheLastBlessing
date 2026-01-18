@@ -221,11 +221,40 @@ button.danger { border-color: #b66; }
    Equipment panel
 ───────────────────────────── */
 .eq-grid{display:grid;gap:10px;}
-.eq-slot{display:grid;grid-template-columns:120px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid #eee;border-radius:10px;}
+.eq-slot{
+  display:grid;
+  grid-template-columns:120px 1fr auto;
+  gap:10px;
+  align-items:center;
+  padding:8px 10px;
+  border:1px solid #eee;
+  border-radius:10px;
+}
 .eq-slot .slot{font-weight:700;font-size:12px;opacity:0.8;}
 .eq-slot .item{font-weight:600;}
 .eq-slot .empty{opacity:0.6;font-style:italic;}
 .smallbtn{padding:6px 8px;border-radius:10px;font-size:12px;}
-.xp-box{margin-top:12px;padding:10px;border:1px solid #eee;border-radius:10px;background:#fafafa;}
-.xp-list{display:grid;gap:6px;margin-top:8px;}
-.xp-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:6px 8px;border:1px solid #eee;border-radius:10px;background:#fff;}
+
+/* EXP (renamed from XP) */
+.exp-box{
+  margin-top:12px;
+  padding:10px;
+  border:1px solid #eee;
+  border-radius:10px;
+  background:#fafafa;
+}
+.exp-list{
+  display:grid;
+  gap:6px;
+  margin-top:8px;
+}
+.exp-row{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  align-items:center;
+  padding:6px 8px;
+  border:1px solid #eee;
+  border-radius:10px;
+  background:#fff;
+}
