@@ -915,6 +915,10 @@
      const log = document.getElementById("roomLog");
      if (!btn || !log) return;
    
+     // Prevent double-binding if we call this multiple times
+     if (btn.dataset.bound === "1") return;
+     btn.dataset.bound = "1";
+   
      btn.addEventListener("click", () => {
        if (!currentArea || currentArea.type === "Town") return;
    
@@ -926,21 +930,18 @@
          log.textContent += "\nYou steady your breath and move deeper...";
        } else if (kind === "Encounter") {
          log.textContent += "\n(placeholder) A monster appears! Combat soon.";
-         // Later: open combat panel, roll spawn, etc.
        } else if (kind === "Chest") {
          log.textContent += "\n(placeholder) You open a chest. Loot soon.";
-         // Later: loot table by lootTier
        } else if (kind === "Safe") {
          log.textContent += "\n(placeholder) You rest. (Later: restore HP/MP)";
        } else if (kind === "Event") {
          log.textContent += "\n(placeholder) Something strange happens...";
        } else if (kind === "Exit") {
          log.textContent += "\nYou found the exit. Returning to town...";
-         // Reuse your existing return-to-town behavior:
          const townId = currentArea.rootTownId ?? "TownA";
          currentArea = { id: townId, type: "Town", name: townId };
          saveWorldState();
-         setView("area");
+         setView("area"); // will re-render area info
          return;
        } else {
          log.textContent += "\n(placeholder) Nothing happens.";
@@ -949,6 +950,7 @@
        saveWorldState();
      });
    }
+
 
 
    
@@ -994,6 +996,7 @@
       title.textContent = "Area Info";
       viewPlaceholder.classList.remove("hidden");
       renderAreaInfo();
+      hookRoomResolveButton();
       return;
     }
 
