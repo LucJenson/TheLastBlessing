@@ -91,22 +91,22 @@
      // Weapons (starter examples)
      RUSTY_SWORD: {
        id: "RUSTY_SWORD", name: "Rusty Sword", kind: "weapon",
-       slot: "weapon", weaponType: "Sword", damageType: "Slash",
+       slot: "weapon", tier: 1, weaponType: "Sword", damageType: "Slash",
        stats: { PATK: 2, PHIT: 1 }
      },
      TRAINING_DAGGER: {
        id: "TRAINING_DAGGER", name: "Training Dagger", kind: "weapon",
-       slot: "weapon", weaponType: "Dagger", damageType: "Pierce",
+       slot: "weapon", tier: 1, weaponType: "Dagger", damageType: "Pierce",
        stats: { PATK: 1, PEVA: 1, PHIT: 1 }
      },
 
      // Armor (starter examples)
-     CLOTH_CAP: { id: "CLOTH_CAP", name: "Cloth Cap", kind: "armor", slot: "head", stats: { HP: 2, PDEF: 1 } },
-     LEATHER_VEST: { id: "LEATHER_VEST", name: "Leather Vest", kind: "armor", slot: "body", stats: { HP: 4, PDEF: 2 } },
-     IRON_GREAVES: { id: "IRON_GREAVES", name: "Iron Greaves", kind: "armor", slot: "legs", stats: { HP: 3, PDEF: 2, PEVA: -1 } },
+     CLOTH_CAP: { id: "CLOTH_CAP", name: "Cloth Cap", kind: "armor", slot: "head", tier: 1, stats: { HP: 2, PDEF: 1 } },
+     LEATHER_VEST: { id: "LEATHER_VEST", name: "Leather Vest", kind: "armor", slot: "body", tier: 1, stats: { HP: 4, PDEF: 2 } },
+     IRON_GREAVES: { id: "IRON_GREAVES", name: "Iron Greaves", kind: "armor", slot: "legs", tier: 1, stats: { HP: 3, PDEF: 2, PEVA: -1 } },
 
      // Accessories
-     COPPER_RING: { id: "COPPER_RING", name: "Copper Ring", kind: "accessory", slot: "accessory1", stats: { PHIT: 1, MHIT: 1 } },
+     COPPER_RING: { id: "COPPER_RING", name: "Copper Ring", kind: "accessory", slot: "accessory1", tier: 1, stats: { PHIT: 1, MHIT: 1 } },
    };
 
    const EQUIPMENT_SLOTS = [
