@@ -695,6 +695,24 @@
      } catch {}
    }
 
+   function ensureEconomyFieldsOnCharacter(ch) {
+     if (!ch) return ch;
+     if (typeof ch.gil !== "number") ch.gil = 0;
+     if (!ch.inventory || typeof ch.inventory !== "object") ch.inventory = {};
+     return ch;
+   }
+   
+   function addGil(amount) {
+     character = ensureEconomyFieldsOnCharacter(character);
+     character.gil = (character.gil || 0) + amount;
+     saveToBrowser();
+   }
+   
+   function addItem(itemId, amount = 1) {
+     character = ensureEconomyFieldsOnCharacter(character);
+     character.inventory[itemId] = (character.inventory[itemId] || 0) + amount;
+     saveToBrowser();
+   }
    
   // ─────────────────────────────────────────────
   // Area / Town state (starter)
