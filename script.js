@@ -1624,33 +1624,41 @@ function renderInventory() {
   if (!invPanel) return;
 
   const inv = character.inventory || {};
-  const entries = Object.entries(inv).filter(([, qty]) => Number(qty) > 0);
-
-  const rowsHtml = entries.length
-    ? entries.map(([id, qty]) => {
-        const item = ITEMS?.[id];
-        const pretty = item?.name || id;
-        const eq = item && isEquippable(item);
-
-        let actionHtml = '';
-        if (eq) {
-          const slot = item.slot;
-          const currently = character.equipment?.[slot] || null;
-          const isEquipped = currently === id;
-          actionHtml = `
-            <button class="smallbtn" data-inv-action="${isEquipped ? 'unequip' : 'equip'}" data-item-id="${id}">
-              ${isEquipped ? 'Unequip' : 'Equip'}
-            </button>`;
-        }
-
-        return `
-          <div class="inv-item">
-            <div class="name">${pretty}</div>
-            <div class="qty">x${qty}</div>
-            <div class="act">${actionHtml}</div>
-          </div>
-        `;
-      }).join('')
+   const entries = Object.entries(inv);
+   
+   // Optional: nicer sorting (equipment first, then consumables, then name)
+   entries.sort(([aId], [bId]) => {
+     const a = ITEMS[aId], b = ITEMS[bId];
+     const aKind = a?.kind || "zzz";
+     const bKind = b?.kind || "zzz";
+     const order = { weapon: 1, armor: 2, accessory: 3, consumable: 4 };
+     const da = order[aKind] ?? 9;
+     const db = order[bKind] ?? 9;
+     if (da !== db) return da - db;
+     return (a?.name || aId).localeCompare(b?.name || bId);
+   });
+   
+   const rows = entries.map(([itemId, qty]) => {
+     const item = ITEMS[itemId];
+     const name = item ? item.name : itemId;
+   
+     // Decide which buttons to show
+     const canEquip = item && isEquippable(item);
+     const equipBtn = canEquip ? `<button class="smallbtn" data-action="equip" data-item="${itemId}">Equip</button>` : "";
+     const useBtn = (item && item.kind === "consumable") ? `<button class="smallbtn" data-action="use" data-item="${itemId}">Use</button>` : "";
+   
+     // If we have buttons, put qty + buttons together in .actions
+     const rightCell = (equipBtn || useBtn)
+       ? `<div class="actions"><span class="qty">${qty}</span>${useBtn}${equipBtn}</div>`
+       : `<div class="qty">${qty}</div>`;
+   
+     return `
+       <div class="inv-row">
+         <div class="name">${name}</div>
+         ${rightCell}
+       </div>
+     `;
+   }).join("");
     : `<div class="placeholder">(Your bag is empty. Go beat up something adorable.)</div>`;
 
   invPanel.innerHTML = `
