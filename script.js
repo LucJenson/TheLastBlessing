@@ -467,7 +467,19 @@
 
       const v = document.createElement("div");
       v.className = "stat-val";
-      v.textContent = String(final[key] ?? 0);
+      const maxVal = Number(final[key] ?? 0);
+      
+      if (["HP","MP","SP","TP"].includes(key)) {
+        character = ensureEconomyFieldsOnCharacter(character);
+        syncCurrentResourcesToMax({ fillMissing: true });
+      
+        const curVal = character.cur[key];
+        v.textContent = `${curVal}/${maxVal}`;
+      } else {
+        v.textContent = String(maxVal);
+      }
+
+
 
       row.appendChild(k);
       row.appendChild(v);
@@ -724,10 +736,39 @@
 
    function ensureEconomyFieldsOnCharacter(ch) {
      if (!ch) return ch;
+   
      if (typeof ch.gil !== "number") ch.gil = 0;
      if (!ch.inventory || typeof ch.inventory !== "object") ch.inventory = {};
+   
+     // Current resource overlay (current values)
+     if (!ch.cur || typeof ch.cur !== "object") ch.cur = {};
+     for (const k of ["HP", "MP", "SP", "TP"]) {
+       if (typeof ch.cur[k] !== "number") ch.cur[k] = null; // null = “not initialized yet”
+     }
+   
      return ch;
    }
+
+   function syncCurrentResourcesToMax({ fillMissing = true } = {}) {
+     character = ensureEconomyFieldsOnCharacter(character);
+   
+     const max = computeFinal(); // gives max HP/MP/SP/TP
+     for (const k of ["HP", "MP", "SP", "TP"]) {
+       const m = Math.max(1, Number(max[k] ?? 1));
+   
+       // initialize if missing
+       if (fillMissing && (character.cur[k] === null || typeof character.cur[k] !== "number")) {
+         character.cur[k] = m;
+       }
+   
+       // clamp if above max
+       if (typeof character.cur[k] === "number") {
+         character.cur[k] = Math.min(character.cur[k], m);
+         character.cur[k] = Math.max(character.cur[k], 0);
+       }
+     }
+   }
+
    
    function addGil(amount) {
      character = ensureEconomyFieldsOnCharacter(character);
@@ -1062,7 +1103,18 @@
            renderAreaInfo();
            return;
        } else if (kind === "Safe") {
-         log.textContent += "\n(placeholder) You rest. (Later: restore HP/MP)";
+           const max = computeFinal();
+           character = ensureEconomyFieldsOnCharacter(character);
+         
+           character.cur.HP = max.HP;
+           character.cur.MP = max.MP;
+           character.cur.SP = max.SP;
+           character.cur.TP = max.TP;
+         
+           saveToBrowser();
+           renderStatsPanel();
+         
+           log.textContent += `\nYou rest and recover. (HP/MP/SP/TP fully restored)`;
        } else if (kind === "Event") {
          log.textContent += "\n(placeholder) Something strange happens...";
        } else if (kind === "Exit") {
@@ -1120,19 +1172,31 @@
        // Monster hits back
        const mdmg = Math.max(1, Math.floor((enc.monster.patk || 1) - (p.PDEF || 0) + 1));
        character = ensureEconomyFieldsOnCharacter(character);
-       character.currentHP = (typeof character.currentHP === "number") ? character.currentHP : (p.HP || 1);
-       character.currentHP = Math.max(0, character.currentHP - mdmg);
-       saveToBrowser();
-   
-       log.textContent += `\n${enc.monster.name} hits you for ${mdmg}. (HP ${character.currentHP}/${p.HP})`;
-   
-       if (character.currentHP <= 0) {
-         log.textContent += `\nYou were knocked out… returning to TownA.`;
-         const townId = currentArea.rootTownId ?? "TownA";
-         currentArea = { id: townId, type: "Town", name: townId };
-         saveWorldState();
-         setView("area");
-       }
+         syncCurrentResourcesToMax({ fillMissing: true });
+         
+         character.cur.HP = Math.max(0, character.cur.HP - mdmg);
+         saveToBrowser();
+         
+         log.textContent += `\n${enc.monster.name} hits you for ${mdmg}. (HP ${character.cur.HP}/${p.HP})`;
+         
+         if (character.cur.HP <= 0) {
+           log.textContent += `\nYou were knocked out… returning to TownA.`;
+         
+           // Restore on knockout (for now)
+           const townId = currentArea.rootTownId ?? "TownA";
+           currentArea = { id: townId, type: "Town", name: townId };
+           syncCurrentResourcesToMax({ fillMissing: true }); // clamps, doesn't restore
+           // Full restore on KO:
+           character.cur.HP = p.HP;
+           character.cur.MP = p.MP;
+           character.cur.SP = p.SP;
+           character.cur.TP = p.TP;
+           saveToBrowser();
+         
+           saveWorldState();
+           setView("area");
+         }
+
      });
    
      flee.addEventListener("click", () => {
@@ -1220,19 +1284,34 @@
   const STORAGE_KEY = "dreamGameCharacter_v2";
 
    function saveToBrowser() {
+     character = ensureEconomyFieldsOnCharacter(character);
+   
+     // Pull from UI into character (authoritative)
+     character.name = (el("charName").value ?? "").trim();
+     character.level = Number(el("charLevel").value ?? 1);
+     character.exp = Number(el("charExp").value ?? 0);
+   
+     // keep overlay sane before saving
+     syncCurrentResourcesToMax({ fillMissing: true });
+   
      const data = {
        name: character.name,
        level: character.level,
        exp: character.exp,
+   
        gil: character.gil,
        inventory: character.inventory,
+       cur: character.cur, // <-- save current resources
+   
        species: el("species").value,
        race: el("race").value,
        job: el("job").value,
        activeTalents: [...activeTalents]
      };
+   
      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
    }
+
 
 
   function loadFromBrowser() {
@@ -1242,14 +1321,15 @@
      try {
        const data = JSON.parse(raw);
    
-       // THIS is the key line you were missing
        character = ensureEconomyFieldsOnCharacter({
          name: data.name ?? "",
          level: data.level ?? 1,
          exp: data.exp ?? 0,
          gil: data.gil,
-         inventory: data.inventory
+         inventory: data.inventory,
+         cur: data.cur // may be undefined; ensure function handles it
        });
+
    
        // UI restore (unchanged)
        el("charName").value = character.name;
@@ -1266,7 +1346,9 @@
        activeTalents = new Set(restored);
    
        ensureNoviceForJob(el("job").value);
-   
+       syncCurrentResourcesToMax({ fillMissing: true });
+       renderStatsPanel();
+
        return true;
      } catch {
        return false;
