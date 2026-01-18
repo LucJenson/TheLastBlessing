@@ -833,8 +833,10 @@
          `Resolved: ${currentArea.roomResolved ? "Yes" : "No"}`;
      }
    
-     renderRoomCard();        // updates resolve button text/visibility
-     hookRoomResolveButton(); // ensures button is bound
+        renderRoomCard();        // updates resolve button text/visibility
+   
+      hookRoomResolveButton(); // ensures button is bound
+      hookEncounterButtons();
    }
 
 
@@ -843,7 +845,11 @@
      const sub = document.getElementById("roomSubtitle");
      const log = document.getElementById("roomLog");
      const btn = document.getElementById("btnResolveRoom");
+     const atk = document.getElementById("btnAttack");
+     const flee = document.getElementById("btnFlee");
+     const inFight = !!currentArea.currentEncounter;
 
+      
       if (btn) {
         const resolved = !!currentArea.roomResolved;
         btn.disabled = resolved;
@@ -888,6 +894,16 @@
        kind === "Event" ? "Investigate" :
        kind === "Exit" ? "Leave Area" :
        "Resolve Room";
+
+      if (atk) atk.classList.toggle("hidden", !inFight);
+      if (flee) flee.classList.toggle("hidden", !inFight);
+
+      // While in a fight, keep Resolve hidden/disabled so players can't “Resolve” twice
+      if (btn) {
+        btn.classList.toggle("hidden", inFight || !!currentArea.roomResolved);
+        btn.disabled = inFight || !!currentArea.roomResolved;
+      }
+      
    }
 
    
@@ -1025,9 +1041,26 @@
        if (kind === "Entry") {
          log.textContent += "\nYou steady your breath and move deeper...";
        } else if (kind === "Encounter") {
-         log.textContent += "\n(placeholder) A monster appears! Combat soon.";
+           // Start fight (room not resolved until monster dies or flee)
+           const m = spawnMonsterForRoom(currentArea, idx);
+           currentArea.currentEncounter = { monster: m };
+           log.textContent += `\nA ${m.name} appears! (${m.hp}/${m.maxHP})`;
+           currentArea.roomResolved = false;
+           saveWorldState();
+           renderAreaInfo();
+           return;
        } else if (kind === "Chest") {
-         log.textContent += "\n(placeholder) You open a chest. Loot soon.";
+           // Simple loot: 1 random consumable
+           const seed = (currentArea.seed + (currentArea.runNonce||0) * 1337 + idx * 31) >>> 0;
+           const rng = mulberry32(seed);
+           const drop = rng() < 0.5 ? ITEMS.HP_POTION_I : ITEMS.EN_TONIC_I;
+         
+           addItem(drop.id, 1);
+           log.textContent += `\nYou found: ${drop.name} x1`;
+           currentArea.roomResolved = true;
+           saveWorldState();
+           renderAreaInfo();
+           return;
        } else if (kind === "Safe") {
          log.textContent += "\n(placeholder) You rest. (Later: restore HP/MP)";
        } else if (kind === "Event") {
@@ -1048,6 +1081,70 @@
      });
    }
 
+   function hookEncounterButtons() {
+     const atk = document.getElementById("btnAttack");
+     const flee = document.getElementById("btnFlee");
+     const log = document.getElementById("roomLog");
+     if (!atk || !flee || !log) return;
+   
+     if (atk.dataset.bound === "1") return;
+     atk.dataset.bound = "1";
+     flee.dataset.bound = "1";
+   
+     atk.addEventListener("click", () => {
+       const enc = currentArea?.currentEncounter;
+       if (!enc) return;
+   
+       // Get player total stats from your existing stat calc
+       const p = getTotalStats(); // << you already have something like this; if yours is named differently, replace it.
+       if (!p) return;
+   
+       // Player hits monster
+       const dmg = Math.max(1, Math.floor((p.PATK || 1) - (enc.monster.pdef || 0) + 1));
+       enc.monster.hp = Math.max(0, enc.monster.hp - dmg);
+       log.textContent += `\nYou hit ${enc.monster.name} for ${dmg}. (${enc.monster.hp}/${enc.monster.maxHP})`;
+   
+       if (enc.monster.hp <= 0) {
+         // Victory
+         const gil = randInt(mulberry32((currentArea.seed + (currentArea.runNonce||0) + (currentArea.roomIndex||0))>>>0), enc.monster.gilMin, enc.monster.gilMax);
+         addGil(gil);
+         log.textContent += `\n${enc.monster.name} defeated! +${gil} GIL`;
+   
+         currentArea.currentEncounter = null;
+         currentArea.roomResolved = true;
+         saveWorldState();
+         renderAreaInfo();
+         return;
+       }
+   
+       // Monster hits back
+       const mdmg = Math.max(1, Math.floor((enc.monster.patk || 1) - (p.PDEF || 0) + 1));
+       character = ensureEconomyFieldsOnCharacter(character);
+       character.currentHP = (typeof character.currentHP === "number") ? character.currentHP : (p.HP || 1);
+       character.currentHP = Math.max(0, character.currentHP - mdmg);
+       saveToBrowser();
+   
+       log.textContent += `\n${enc.monster.name} hits you for ${mdmg}. (HP ${character.currentHP}/${p.HP})`;
+   
+       if (character.currentHP <= 0) {
+         log.textContent += `\nYou were knocked out… returning to TownA.`;
+         const townId = currentArea.rootTownId ?? "TownA";
+         currentArea = { id: townId, type: "Town", name: townId };
+         saveWorldState();
+         setView("area");
+       }
+     });
+   
+     flee.addEventListener("click", () => {
+       if (!currentArea?.currentEncounter) return;
+       log.textContent += `\nYou flee back to the previous path. (placeholder)`;
+       currentArea.currentEncounter = null;
+       // Treat flee as "resolved" so you can move on, or keep it unresolved if you want pressure.
+       currentArea.roomResolved = true;
+       saveWorldState();
+       renderAreaInfo();
+     });
+   }
 
 
    
