@@ -167,26 +167,7 @@
     return objs.reduce((acc, o) => add(acc, o), emptyStats());
   }
 
-   // --- Equipment safety helper ---
-function ensureEquipmentFieldsOnCharacter() {
-  if (!character.equipment) {
-    character.equipment = {
-      weapon: null,
-      head: null,
-      body: null,
-      legs: null,
-      accessory1: null,
-      accessory2: null
-    };
-  }
 
-  if (!character.expPools) {
-    character.expPools = {
-      weapon: {},
-      damage: {}
-    };
-  }
-}
 
    
   // ─────────────────────────────────────────────
@@ -506,6 +487,26 @@ function ensureEquipmentFieldsOnCharacter() {
     return total;
   }
 
+   // --- Equipment safety helper ---
+   function ensureEquipmentFieldsOnCharacter() {
+     if (!character.equipment) {
+       character.equipment = {
+         weapon: null,
+         head: null,
+         body: null,
+         legs: null,
+         accessory1: null,
+         accessory2: null
+       };
+     }
+   
+     if (!character.expPools) {
+       character.expPools = {
+         weapon: {},
+         damage: {}
+       };
+     }
+   }
 
   function sumEquipmentStats() {
     character = ensureEquipmentFieldsOnCharacter(character);
