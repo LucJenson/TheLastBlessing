@@ -634,9 +634,12 @@
        rooms,
        monsterTier,
        lootTier,
-        roomsTotal: rooms,
-        rooms: roomList,
-        roomIndex: 0,
+       roomsTotal: rooms,
+       rooms: roomList,
+       roomIndex: 0,
+       entered: false,
+       roomResolved: false,
+
        // room-by-room comes next; this is enough to "arrive"
      };
    }
@@ -644,6 +647,11 @@
    function travelToArea(areaObj) {
      currentArea = areaObj;
      saveWorldState();
+
+     // entering a new area: not entered yet, room not resolved
+     currentArea.entered = false;
+     currentArea.roomIndex = currentArea.roomIndex ?? 0;
+     currentArea.roomResolved = false;
      // Automatically show Area Info when you travel
      setView("area");
      renderAreaInfo();
@@ -700,9 +708,11 @@
    function renderAreaInfo() {
      const areaName = document.getElementById("areaName");
      const areaType = document.getElementById("areaType");
+   
      const gatePanel = document.getElementById("gatePanel");
      const gateOutput = document.getElementById("gateOutput");
    
+     const btnGate   = document.getElementById("btnAccessGate");
      const btnWeapon = document.getElementById("btnWeaponShop");
      const btnArmor  = document.getElementById("btnArmorShop");
      const btnItem   = document.getElementById("btnItemShop");
@@ -711,62 +721,92 @@
      const btnNext   = document.getElementById("btnNextRoom");
      const btnReturn = document.getElementById("btnReturnTown");
    
+     const roomCard  = document.getElementById("roomCard");
+   
      if (areaName) areaName.textContent = currentArea?.name ?? "(unknown)";
      if (areaType) areaType.textContent = currentArea?.type ?? "(unknown)";
    
-     // Hide gate panel by default
+     const isTown = currentArea?.type === "Town";
+     const isArea = !isTown;
+   
+     // Always collapse gate UI when re-rendering
      if (gatePanel) gatePanel.classList.add("hidden");
    
-     const isTown = currentArea?.type === "Town";
-   
-     // Town buttons visible only in Town
-     [btnWeapon, btnArmor, btnItem].forEach(b => {
-       if (!b) return;
-       b.classList.toggle("hidden", !isTown);
-     });
-   
-     // Area buttons visible only in Field/Dungeon
-     [btnEnter, btnNext, btnReturn].forEach(b => {
-       if (!b) return;
-       b.classList.toggle("hidden", isTown);
-     });
-   
-     if (!gateOutput) return;
-   
+     // ── Town: Gate + shops ONLY ─────────────────
      if (isTown) {
-       gateOutput.textContent = "(enter 3 keywords)";
+       if (btnGate) btnGate.classList.remove("hidden");
+       [btnWeapon, btnArmor, btnItem].forEach(b => b && b.classList.remove("hidden"));
+   
+       [btnEnter, btnNext, btnReturn].forEach(b => b && b.classList.add("hidden"));
+       if (roomCard) roomCard.classList.add("hidden");
+   
+       if (gateOutput) gateOutput.textContent = "(enter 3 keywords)";
        return;
      }
    
-     // Field/Dungeon info
-     const kw = (currentArea.keywords && currentArea.keywords.length === 3)
-       ? currentArea.keywords.join(" / ")
-       : "(unknown keywords)";
+     // ── Area: NEVER show Gate or Shops ──────────
+     if (btnGate) btnGate.classList.add("hidden");
+     [btnWeapon, btnArmor, btnItem].forEach(b => b && b.classList.add("hidden"));
    
-     const roomIndex = currentArea.roomIndex ?? 0;
-     const roomsTotal = currentArea.roomsTotal ?? (currentArea.rooms?.length ?? 0);
-     const room = currentArea.rooms?.[roomIndex];
+     // Return to town is always available in an area
+     if (btnReturn) btnReturn.classList.remove("hidden");
    
-     gateOutput.textContent =
-       `Keywords: ${kw}\n` +
-       `ID: ${currentArea.id}\n` +
-       `Seed: ${currentArea.seed}\n` +
-       `Rec. Level: ${currentArea.recommendedLevel}\n` +
-       `Monster Tier: ${currentArea.monsterTier}\n` +
-       `Loot Tier: ${currentArea.lootTier}\n\n` +
-       `Progress: Room ${roomIndex + 1} / ${roomsTotal}\n` +
-       `Current Room: ${room?.kind ?? "(unknown)"}`;
-
-      renderRoomCard();
-
+     // If not entered yet: show Enter Area only
+     if (!currentArea.entered) {
+       if (btnEnter) btnEnter.classList.remove("hidden");
+       if (btnNext) btnNext.classList.add("hidden");
+       if (roomCard) roomCard.classList.add("hidden");
+   
+       if (gateOutput) {
+         const kw = currentArea.keywords?.join(" / ") ?? "(unknown keywords)";
+         gateOutput.textContent =
+           `Keywords: ${kw}\n` +
+           `Arrived: ${currentArea.name}\n` +
+           `Ready to enter.`;
+       }
+       return;
+     }
+   
+     // Entered: show Next Room + Room Card
+     if (btnEnter) btnEnter.classList.add("hidden");
+     if (btnNext) btnNext.classList.remove("hidden");
+     if (roomCard) roomCard.classList.remove("hidden");
+   
+     // Next Room disabled until current room is resolved
+     if (btnNext) btnNext.disabled = !currentArea.roomResolved;
+   
+     // Show area + room status
+     if (gateOutput) {
+       const kw = currentArea.keywords?.join(" / ") ?? "(unknown keywords)";
+       const idx = currentArea.roomIndex ?? 0;
+       const total = currentArea.roomsTotal ?? (currentArea.rooms?.length ?? 0);
+       const kind = currentArea.rooms?.[idx]?.kind ?? "(unknown)";
+       gateOutput.textContent =
+         `Keywords: ${kw}\n` +
+         `Progress: Room ${idx + 1} / ${total}\n` +
+         `Current Room: ${kind}\n` +
+         `Resolved: ${currentArea.roomResolved ? "Yes" : "No"}`;
+     }
+   
+     renderRoomCard();        // updates resolve button text/visibility
+     hookRoomResolveButton(); // ensures button is bound
    }
+
 
    function renderRoomCard() {
      const title = document.getElementById("roomTitle");
      const sub = document.getElementById("roomSubtitle");
      const log = document.getElementById("roomLog");
      const btn = document.getElementById("btnResolveRoom");
-   
+
+      if (btn) {
+        const resolved = !!currentArea.roomResolved;
+        btn.disabled = resolved;
+      
+        // If you want it to “hide” after resolving:
+        btn.classList.toggle("hidden", resolved);
+      }
+      
      if (!title || !sub || !log || !btn) return;
    
      if (!currentArea || currentArea.type === "Town") {
@@ -848,31 +888,40 @@
       if (btnEnterArea) {
         btnEnterArea.addEventListener("click", () => {
           if (currentArea?.type === "Town") return;
-          // Just re-render for now; later this can open a "Room panel"
-          renderAreaInfo();
+      
+          currentArea.entered = true;
+          currentArea.roomResolved = false;
+          currentArea._lastRenderedRoom = null;
+      
           saveWorldState();
+          renderAreaInfo();
         });
       }
       
       if (btnNextRoom) {
         btnNextRoom.addEventListener("click", () => {
           if (currentArea?.type === "Town") return;
+          if (!currentArea.entered) return;
+          if (!currentArea.roomResolved) return; // hard lock
       
           const total = currentArea.roomsTotal ?? (currentArea.rooms?.length ?? 0);
           if (!total) return;
       
           currentArea.roomIndex = Math.min((currentArea.roomIndex ?? 0) + 1, total - 1);
-          currentArea._lastRenderedRoom = null; // force new log for next room
-          renderAreaInfo();
+          currentArea.roomResolved = false;
+          currentArea._lastRenderedRoom = null;
+      
           saveWorldState();
+          renderAreaInfo();
         });
       }
+
       
       if (btnReturnTown) {
         btnReturnTown.addEventListener("click", () => {
-          // Return to root town if stored, else TownA
           const townId = currentArea?.rootTownId ?? "TownA";
           currentArea = { id: townId, type: "Town", name: townId };
+      
           saveWorldState();
           setView("area");
         });
@@ -946,8 +995,9 @@
        } else {
          log.textContent += "\n(placeholder) Nothing happens.";
        }
-   
-       saveWorldState();
+      currentArea.roomResolved = true;
+      saveWorldState();
+      renderAreaInfo();
      });
    }
 
