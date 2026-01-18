@@ -89,21 +89,22 @@
           <h3 id="areaName">TownA</h3>
           <div class="hint" id="areaType">Town</div>
         
-            <div class="save-row" style="margin-top:10px;">
-              <button id="btnAccessGate">Access Gate</button>
-            
-              <!-- Town-only -->
-              <button id="btnWeaponShop">Weapon Shop</button>
-              <button id="btnArmorShop">Armor Shop</button>
-              <button id="btnItemShop">Item Shop</button>
-            
-              <!-- Area-only -->
-              <button id="btnEnterArea">Enter Area</button>
-              <button id="btnNextRoom">Next Room</button>
-              <button id="btnReturnTown">Return to Town</button>
-            </div>
+          <!-- Town controls -->
+          <div class="save-row" style="margin-top:10px;">
+            <button id="btnAccessGate">Access Gate</button>
+            <button id="btnWeaponShop">Weapon Shop</button>
+            <button id="btnArmorShop">Armor Shop</button>
+            <button id="btnItemShop">Item Shop</button>
+          </div>
         
-          <!-- Gate UI lives inside Area Info (collapsed by default) -->
+          <!-- Area controls (hidden until in Field/Dungeon) -->
+          <div class="save-row" style="margin-top:10px;">
+            <button id="btnEnterArea" class="hidden">Enter Area</button>
+            <button id="btnNextRoom" class="hidden" disabled>Next Room</button>
+            <button id="btnReturnTown" class="hidden">Return to Town</button>
+          </div>
+        
+          <!-- Gate UI (Town only; your JS will hide it in areas) -->
           <div id="gatePanel" class="hidden" style="margin-top:12px;">
             <h3>Gate of the Goddess</h3>
         
@@ -126,38 +127,21 @@
               <button id="btnOpenGate">Open Gate</button>
               <button id="btnCloseGate">Close</button>
             </div>
-        
-            <pre id="gateOutput" style="margin-top:10px;">(enter 3 keywords)</pre>
-            <div id="roomCard" style="margin-top:12px;">
-              <h3 id="roomTitle">Room</h3>
-              <div class="hint" id="roomSubtitle">(no room loaded)</div>
-            
-              <div class="save-row" style="margin-top:10px;">
-                <button id="btnResolveRoom">Resolve Room</button>
-              </div>
-            
-              <pre id="roomLog" style="margin-top:10px;">(room log)</pre>
-            </div>
           </div>
-          <!-- Area travel controls (Area only) -->
+        
+          <!-- Info + Room UI (shown when entered) -->
+          <pre id="gateOutput" style="margin-top:10px;">(enter 3 keywords)</pre>
+        
+          <div id="roomCard" class="hidden" style="margin-top:12px;">
+            <h3 id="roomTitle">Room</h3>
+            <div class="hint" id="roomSubtitle">(not entered)</div>
+        
             <div class="save-row" style="margin-top:10px;">
-              <button id="btnEnterArea" class="hidden">Enter Area</button>
-              <button id="btnNextRoom" class="hidden" disabled>Next Room</button>
-              <button id="btnReturnTown" class="hidden">Return to Town</button>
+              <button id="btnResolveRoom">Resolve Room</button>
             </div>
-            
-            <!-- Room UI (Area only) -->
-            <div id="roomCard" class="hidden" style="margin-top:12px;">
-              <h3 id="roomTitle">Room</h3>
-              <div class="hint" id="roomSubtitle">(not entered)</div>
-            
-              <div class="save-row" style="margin-top:10px;">
-                <button id="btnResolveRoom">Resolve Room</button>
-              </div>
-            
-              <pre id="roomLog" style="margin-top:10px;">(no room yet)</pre>
-            </div>
-
+        
+            <pre id="roomLog" style="margin-top:10px;">(no room yet)</pre>
+          </div>
         </section>
       </section>
     </main>
