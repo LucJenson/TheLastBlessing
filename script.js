@@ -1096,7 +1096,7 @@
        if (!enc) return;
    
        // Get player total stats from your existing stat calc
-       const p = getTotalStats(); // << you already have something like this; if yours is named differently, replace it.
+       const p = computeFinal();
        if (!p) return;
    
        // Player hits monster
