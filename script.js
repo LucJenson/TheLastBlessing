@@ -8,7 +8,7 @@
   // Guard against accidental double-loading (e.g., if script tag exists twice)
   if (window.__dreamGameInitialized) return;
   window.__dreamGameInitialized = true;
-
+  let currentView = "area";
   // ─────────────────────────────────────────────
   // Stats / Core data
   // ─────────────────────────────────────────────
@@ -773,13 +773,18 @@
    function addGil(amount) {
      character = ensureEconomyFieldsOnCharacter(character);
      character.gil = (character.gil || 0) + amount;
+      
      saveToBrowser();
+      if (currentView === "inventory") renderInventory();
+
    }
    
    function addItem(itemId, amount = 1) {
      character = ensureEconomyFieldsOnCharacter(character);
      character.inventory[itemId] = (character.inventory[itemId] || 0) + amount;
      saveToBrowser();
+      if (currentView === "inventory") renderInventory();
+
    }
    
   // ─────────────────────────────────────────────
@@ -1220,7 +1225,8 @@
     const viewCreator = el("viewCreator");
     const viewTalents = el("viewTalents");
     const viewPlaceholder = el("viewPlaceholder");
-
+    const areaPanel = document.getElementById("areaPanel");
+    const inventoryPanel = document.getElementById("inventoryPanel");
     // placeholderText is now OPTIONAL (may not exist in your new Area panel)
     const placeholderText = document.getElementById("placeholderText");
 
@@ -1229,6 +1235,9 @@
     viewTalents.classList.add("hidden");
     viewPlaceholder.classList.add("hidden");
 
+    if (areaPanel) areaPanel.classList.add("hidden");
+    if (inventoryPanel) inventoryPanel.classList.add("hidden");
+     
     if (viewKey === "back") {
       title.textContent = "—";
       viewPlaceholder.classList.remove("hidden");
@@ -1253,11 +1262,28 @@
     if (viewKey === "area") {
       title.textContent = "Area Info";
       viewPlaceholder.classList.remove("hidden");
+
+      if (inventoryPanel) inventoryPanel.classList.add("hidden");
+      if (areaPanel) areaPanel.classList.remove("hidden");
+      
       renderAreaInfo();
       hookRoomResolveButton();
       return;
     }
 
+    if (viewKey === "inventory") {
+        currentView = "inventory";
+        title.textContent = "Inventory";
+        viewPlaceholder.classList.remove("hidden");
+      
+        if (areaPanel) areaPanel.classList.add("hidden");
+        if (inventoryPanel) inventoryPanel.classList.remove("hidden");
+      
+        renderInventory();
+        return;
+    }
+
+     
     title.textContent =
       viewKey === "inventory" ? "Inventory" :
       viewKey === "equipment" ? "Equipment" :
@@ -1278,6 +1304,37 @@
     });
   }
 
+function renderInventory() {
+  character = ensureEconomyFieldsOnCharacter(character);
+
+  const invPanel = document.getElementById("inventoryPanel");
+  if (!invPanel) return;
+
+  const inv = character.inventory || {};
+  const entries = Object.entries(inv).filter(([, qty]) => Number(qty) > 0);
+
+  const rowsHtml = entries.length
+    ? entries.map(([id, qty]) => {
+        const pretty = (ITEMS?.[id]?.name) || id; // fallback if unknown item id
+        return `
+          <div class="inv-item">
+            <div class="name">${pretty}</div>
+            <div class="qty">x${qty}</div>
+          </div>
+        `;
+      }).join("")
+    : `<div class="placeholder">(Your bag is empty. Go beat up something adorable.)</div>`;
+
+  invPanel.innerHTML = `
+    <div class="inv-header">
+      <div class="hint">Items you've collected (saved to browser)</div>
+      <div class="inv-gil">GIL: ${character.gil ?? 0}</div>
+    </div>
+    <div class="inv-list">${rowsHtml}</div>
+  `;
+}
+
+   
   // ─────────────────────────────────────────────
   // Storage
   // ─────────────────────────────────────────────
