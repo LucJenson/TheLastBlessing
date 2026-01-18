@@ -72,6 +72,33 @@
     return Object.fromEntries(STATS.map(s => [s, 0]));
   }
 
+   //CHARACTER BASICS
+   let character = {
+      name: "",
+      level: 1,
+      exp: 0,
+      gil: 0,
+      inventory: {}
+    };
+
+   //ITEM TABLES
+   const ITEMS = {
+     HP_POTION_I: { id: "HP_POTION_I", name: "Health Potion I" },
+     EN_TONIC_I: { id: "EN_TONIC_I", name: "Energy Tonic I" },
+   };
+
+   //MONSTER TABLES
+   const MONSTERS = [
+     { id:"GOBLIN", name:"Goblin", tier:1, hp:22, patk:5, pdef:1, gilMin:3, gilMax:7 },
+     { id:"WOLF",   name:"Wolf",   tier:1, hp:20, patk:6, pdef:1, gilMin:3, gilMax:8 },
+     { id:"SLIME",  name:"Slime",  tier:1, hp:26, patk:4, pdef:2, gilMin:2, gilMax:6 },
+   
+     { id:"BANDIT", name:"Bandit", tier:2, hp:34, patk:8, pdef:3, gilMin:6, gilMax:14 },
+     { id:"BOAR",   name:"Boar",   tier:2, hp:38, patk:7, pdef:4, gilMin:6, gilMax:12 },
+   ];
+
+
+   
   // IMPORTANT CHANGE:
   // Job stats are handled via the Novice talent (auto-active).
   const jobMods = {
@@ -906,7 +933,9 @@
       if (btnEnterArea) {
         btnEnterArea.addEventListener("click", () => {
           if (currentArea?.type === "Town") return;
-      
+
+          currentArea.runNonce = (currentArea.runNonce || 0) + 1;
+          currentArea.currentEncounter = null; // clear any old fight
           currentArea.entered = true;
           currentArea.roomResolved = false;
           currentArea._lastRenderedRoom = null;
@@ -1093,46 +1122,59 @@
   // ─────────────────────────────────────────────
   const STORAGE_KEY = "dreamGameCharacter_v2";
 
-  function saveToBrowser() {
-    const data = {
-      name: el("charName").value ?? "",
-      level: Number(el("charLevel").value ?? 1),
-      exp: Number(el("charExp").value ?? 0),
-      species: el("species").value,
-      race: el("race").value,
-      job: el("job").value,
-      activeTalents: [...activeTalents]
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }
+   function saveToBrowser() {
+     const data = {
+       name: character.name,
+       level: character.level,
+       exp: character.exp,
+       gil: character.gil,
+       inventory: character.inventory,
+       species: el("species").value,
+       race: el("race").value,
+       job: el("job").value,
+       activeTalents: [...activeTalents]
+     };
+     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+   }
+
 
   function loadFromBrowser() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
-
-    try {
-      const data = JSON.parse(raw);
-
-      el("charName").value = data.name ?? "";
-      el("charLevel").value = data.level ?? 1;
-      el("charExp").value = data.exp ?? 0;
-
-      if (data.species && speciesMods[data.species]) el("species").value = data.species;
-      updateRaces();
-
-      if (data.race && raceMods[data.race]) el("race").value = data.race;
-      if (data.job && jobMods[data.job]) el("job").value = data.job;
-
-      const restored = (data.activeTalents ?? []).filter(id => talentById[id]);
-      activeTalents = new Set(restored);
-
-      ensureNoviceForJob(el("job").value);
-
-      return true;
-    } catch {
-      return false;
-    }
-  }
+     const raw = localStorage.getItem(STORAGE_KEY);
+     if (!raw) return false;
+   
+     try {
+       const data = JSON.parse(raw);
+   
+       // THIS is the key line you were missing
+       character = ensureEconomyFieldsOnCharacter({
+         name: data.name ?? "",
+         level: data.level ?? 1,
+         exp: data.exp ?? 0,
+         gil: data.gil,
+         inventory: data.inventory
+       });
+   
+       // UI restore (unchanged)
+       el("charName").value = character.name;
+       el("charLevel").value = character.level;
+       el("charExp").value = character.exp;
+   
+       if (data.species && speciesMods[data.species]) el("species").value = data.species;
+       updateRaces();
+   
+       if (data.race && raceMods[data.race]) el("race").value = data.race;
+       if (data.job && jobMods[data.job]) el("job").value = data.job;
+   
+       const restored = (data.activeTalents ?? []).filter(id => talentById[id]);
+       activeTalents = new Set(restored);
+   
+       ensureNoviceForJob(el("job").value);
+   
+       return true;
+     } catch {
+       return false;
+     }
+   }
 
   function hookSaveButtons() {
     el("btnSave").addEventListener("click", () => saveToBrowser());
@@ -1148,6 +1190,35 @@
     });
   }
 
+    function spawnMonsterForRoom(area, roomIndex) {
+     const tier = area.monsterTier || 1;
+   
+     const seed = (area.seed ^ 0x9e3779b9) + (area.runNonce || 0) * 10007 + roomIndex * 97;
+     const rng = mulberry32(seed >>> 0);
+   
+     const pool = MONSTERS.filter(m => m.tier <= tier);
+     const base = pick(rng, pool);
+   
+     // Slight per-spawn variation without creating a “new monster type”
+     const levelJitter = randInt(rng, 0, 2);
+     const hp = base.hp + randInt(rng, 0, 6);
+     const patk = base.patk + levelJitter;
+     const pdef = base.pdef + (rng() < 0.35 ? 1 : 0);
+   
+     return {
+       id: base.id,
+       name: base.name,
+       tier: base.tier,
+       maxHP: hp,
+       hp,
+       patk,
+       pdef,
+       gilMin: base.gilMin,
+       gilMax: base.gilMax,
+     };
+   }
+
+   
   // ─────────────────────────────────────────────
   // Select population + change handlers
   // ─────────────────────────────────────────────
