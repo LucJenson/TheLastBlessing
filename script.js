@@ -488,41 +488,54 @@
   }
 
    // --- Equipment safety helper ---
-   function ensureEquipmentFieldsOnCharacter() {
-     if (!character.equipment) {
-       character.equipment = {
-         weapon: null,
-         head: null,
-         body: null,
-         legs: null,
-         accessory1: null,
-         accessory2: null
-       };
-     }
-   
-     if (!character.expPools) {
-       character.expPools = {
-         weapon: {},
-         damage: {}
-       };
-     }
-   }
+function ensureEquipmentFieldsOnCharacter(ch) {
+  if (!ch || typeof ch !== "object") ch = {};
 
-  function sumEquipmentStats() {
-    character = ensureEquipmentFieldsOnCharacter(character);
-    const eq = character.equipment;
-    if (!eq) return emptyStats();
-
-    let total = emptyStats();
-    for (const slot of EQUIPMENT_SLOTS) {
-      const id = eq[slot];
-      if (!id) continue;
-      const item = ITEMS[id];
-      if (!item || !item.stats) continue;
-      total = add(total, item.stats);
+  if (!ch.equipment || typeof ch.equipment !== "object") {
+    ch.equipment = {
+      weapon: null,
+      head: null,
+      body: null,
+      legs: null,
+      accessory1: null,
+      accessory2: null
+    };
+  } else {
+    // ensure all slots exist
+    for (const s of ["weapon","head","body","legs","accessory1","accessory2"]) {
+      if (!(s in ch.equipment)) ch.equipment[s] = null;
     }
-    return total;
   }
+
+  if (!ch.expPools || typeof ch.expPools !== "object") ch.expPools = {};
+  if (!ch.expPools.weapon || typeof ch.expPools.weapon !== "object") ch.expPools.weapon = {};
+  if (!ch.expPools.damage || typeof ch.expPools.damage !== "object") ch.expPools.damage = {};
+
+  return ch;
+}
+
+
+function sumEquipmentStats() {
+  character = ensureEquipmentFieldsOnCharacter(character);
+
+  const eq = character.equipment;
+  if (!eq) return emptyStats();
+
+  let total = emptyStats();
+
+  for (const slot of EQUIPMENT_SLOTS) {
+    const id = eq[slot.key];            // <-- FIX: use slot.key
+    if (!id) continue;
+
+    const item = ITEMS[id];
+    if (!item || !item.stats) continue;
+
+    total = add(total, item.stats);
+  }
+
+  return total;
+}
+
 
   function computeFinal() {
     const sp = el("species").value;
@@ -838,9 +851,9 @@
 
      // Equipment (item ids by slot)
      if (!ch.equipment || typeof ch.equipment !== "object") ch.equipment = {};
-     for (const slot of EQUIPMENT_SLOTS) {
-       if (typeof ch.equipment[slot] !== "string") ch.equipment[slot] = null;
-     }
+      for (const slot of EQUIPMENT_SLOTS) {
+        if (typeof ch.equipment[slot.key] !== "string") ch.equipment[slot.key] = null;
+      }
 
      // Experience pools used for talent purchasing later
      if (!ch.expPools || typeof ch.expPools !== "object") ch.expPools = {};
@@ -1639,8 +1652,10 @@ function renderInventory() {
       if (action === 'equip') {
         equipItem(itemId);
       } else if (action === 'unequip') {
-        unequipItem(itemId);
+        const it = ITEMS?.[itemId];
+        if (it?.slot) unequipSlot(it.slot);
       }
+
 
       // refresh panels
       renderInventory();
@@ -1661,19 +1676,22 @@ function renderEquipment() {
 
   const eq = character.equipment || {};
 
-  const slotRows = EQUIPMENT_SLOTS.map((slot) => {
-    const id = eq[slot];
-    const item = id ? ITEMS[id] : null;
-    const name = item ? item.name : '(empty)';
-    const btn = id ? `<button class="smallbtn" data-action="unequip" data-slot="${slot}">Unequip</button>` : `<span class="hint">&nbsp;</span>`;
-    return `
-      <div class="eq-slot">
-        <div class="slot">${slotLabel(slot)}</div>
-        <div class="name">${name}</div>
-        <div class="actions">${btn}</div>
-      </div>
-    `;
-  }).join('');
+   const slotRows = EQUIPMENT_SLOTS.map((slot) => {
+     const id = eq[slot.key];                    // <-- FIX
+     const item = id ? ITEMS[id] : null;
+     const name = item ? item.name : '(empty)';
+     const btn = id
+       ? `<button class="smallbtn" data-action="unequip" data-slot="${slot.key}">Unequip</button>`
+       : `<span class="hint">&nbsp;</span>`;
+   
+     return `
+       <div class="eq-slot">
+         <div class="slot">${slotLabel(slot.key)}</div>
+         <div class="name">${name}</div>
+         <div class="actions">${btn}</div>
+       </div>
+     `;
+   }).join('');
 
   const wp = character.expPools?.weapon || {};
   const dp = character.expPools?.damage || {};
