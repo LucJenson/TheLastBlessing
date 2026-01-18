@@ -788,6 +788,7 @@ function sumEquipmentStats() {
    
    function travelToArea(areaObj) {
      currentArea = areaObj;
+     currentArea.runNonce = (currentArea.runNonce || 0) + 1;
      saveWorldState();
 
      // entering a new area: not entered yet, room not resolved
@@ -1291,7 +1292,10 @@ function sumEquipmentStats() {
            renderAreaInfo();
            return;
        } else if (kind === "Chest") {
-           const seed = (currentArea.seed + (currentArea.runNonce||0) * 1337 + idx * 31) >>> 0;
+           const seed =
+              currentArea.seed +
+              (currentArea.runNonce || 0) * 100000 +
+              idx * 31;
            const rng = mulberry32(seed);
          
            const lootTier = currentArea.lootTier ?? 1;
