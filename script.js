@@ -1717,8 +1717,27 @@ function renderEquipment() {
 
   const wp = character.expPools?.weapon || {};
   const dp = character.expPools?.damage || {};
-  const wpRows = Object.keys(wp).length ? Object.entries(wp).map(([k,v]) => `<div class="exp-row"><div>${k}</div><div>${Math.floor(v)}</div></div>`).join('') : `<div class="hint">(no weapon XP yet)</div>`;
-  const dpRows = Object.keys(dp).length ? Object.entries(dp).map(([k,v]) => `<div class="exp-row"><div>${k}</div><div>${Math.floor(v)}</div></div>`).join('') : `<div class="hint">(no damage-type XP yet)</div>`;
+  const wpRows = Object.keys(wp).length
+     ? Object.entries(wp)
+         .map(([k, v]) => `
+           <div class="exp-row">
+             <span class="exp-label">${k}</span>
+             <span class="exp-value">${Math.floor(v)}</span>
+           </div>
+         `)
+         .join("")
+        : `<div class="hint">(no weapon XP yet)</div>`;
+   
+   const dpRows = Object.keys(dp).length
+     ? Object.entries(dp)
+         .map(([k, v]) => `
+           <div class="exp-row">
+             <span class="exp-label">${k}</span>
+             <span class="exp-value">${Math.floor(v)}</span>
+           </div>
+         `)
+         .join("")
+     : `<div class="hint">(no damage-type XP yet)</div>`;
 
   eqPanel.innerHTML = `
     <div class="inv-header">
