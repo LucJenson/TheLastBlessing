@@ -788,14 +788,18 @@ function sumEquipmentStats() {
    
    function travelToArea(areaObj) {
      currentArea = areaObj;
-     currentArea.runNonce = (currentArea.runNonce || 0) + 1;
-     saveWorldState();
-
+   
      // entering a new area: not entered yet, room not resolved
      currentArea.entered = false;
      currentArea.roomIndex = currentArea.roomIndex ?? 0;
      currentArea.roomResolved = false;
-     // Automatically show Area Info when you travel
+   
+     // ✅ increment ON ENTER (after flags)
+     currentArea.runNonce = (currentArea.runNonce || 0) + 1;
+   
+     // ✅ save after the change
+     saveWorldState();
+   
      setView("area");
      renderAreaInfo();
    }
@@ -1292,11 +1296,16 @@ function sumEquipmentStats() {
            renderAreaInfo();
            return;
        } else if (kind === "Chest") {
-           const seed =
-              currentArea.seed +
-              (currentArea.runNonce || 0) * 100000 +
-              idx * 31;
-           const rng = mulberry32(seed);
+           const baseSeed = (typeof currentArea.seed === "number")
+              ? (currentArea.seed >>> 0)
+              : hashStringToUint(String(currentArea.seed || ""));
+            
+            const seed =
+              (baseSeed +
+               (currentArea.runNonce || 0) * 100000 +
+               idx * 31) >>> 0;
+            
+            const rng = mulberry32(seed);
          
            const lootTier = currentArea.lootTier ?? 1;
            const { consumables, gearUpToTier } = getLootPoolsForTier(lootTier);
@@ -1315,8 +1324,8 @@ function sumEquipmentStats() {
            }
 
            const rarity = rollRarity(rng, lootTier);
-           addItem(drop.id, 1);
-           log.textContent += `\nYou found: ${drop.name} x1`;
+           addItem(drop.id, 1, rarity);
+           log.textContent += `\nYou found: ${rarity} ${drop.name} x1`;
          
            currentArea.roomResolved = true;
            saveWorldState();
@@ -1353,6 +1362,15 @@ function sumEquipmentStats() {
      });
    }
 
+   function hashStringToUint(str) {
+     let h = 2166136261 >>> 0;
+     for (let i = 0; i < str.length; i++) {
+       h ^= str.charCodeAt(i);
+       h = Math.imul(h, 16777619);
+     }
+     return h >>> 0;
+   }
+   
    function hookEncounterButtons() {
      const atk = document.getElementById("btnAttack");
      const flee = document.getElementById("btnFlee");
