@@ -47,7 +47,7 @@
     MATK:15, MDEF:10, MHIT:95, MEVA:5,
     FIR:0, WTR:0, AIR:0, ERT:0, LGT:0, DRK:0
   };
-
+   
   const speciesMods = {
     Human: { HP:0, SP:5, TP:5, MP:0, PATK:1, PDEF:1, PHIT:1, PEVA:1, MATK:1, MDEF:1, MHIT:1, MEVA:1, FIR:0, WTR:0, AIR:0, ERT:0, LGT:0, DRK:0 },
     Elf:   { HP:-10, SP:0, TP:-5, MP:20, PATK:-2, PDEF:-2, PHIT:3, PEVA:3, MATK:4, MDEF:3, MHIT:4, MEVA:4, FIR:0, WTR:2, AIR:2, ERT:0, LGT:3, DRK:0 },
@@ -68,6 +68,14 @@
     Wyld: { species:"Beast", HP:5,  SP:5, TP:0, MP:0,  PATK:3, PDEF:-1, PHIT:0, PEVA:2, MATK:0, MDEF:0, MHIT:0, MEVA:0, FIR:1, WTR:0, AIR:0, ERT:0, LGT:0, DRK:3 }
   };
 
+   const RARITIES = {
+     COMMON:     { key: "COMMON",     name: "Common",     mult: 1.0,  color: "#bbb" },
+     UNCOMMON:   { key: "UNCOMMON",   name: "Uncommon",   mult: 1.2,  color: "#4caf50" },
+     RARE:       { key: "RARE",       name: "Rare",       mult: 1.5,  color: "#2196f3" },
+     LEGENDARY:  { key: "LEGENDARY",  name: "Legendary",  mult: 1.8,  color: "#ff9800" },
+     MYTHIC:     { key: "MYTHIC",     name: "Mythic",     mult: 2.0,  color: "#e91e63" }
+   };
+   
   function emptyStats() {
     return Object.fromEntries(STATS.map(s => [s, 0]));
   }
@@ -85,8 +93,18 @@
    // For now, equipping does NOT consume the item (it just marks it equipped).
    const ITEMS = {
      // Consumables
-     HP_POTION_I: { id: "HP_POTION_I", name: "Health Potion I", kind: "consumable" },
-     EN_TONIC_I:  { id: "EN_TONIC_I",  name: "Energy Tonic I", kind: "consumable" },
+     HP_POTION_I: {
+       id: "HP_POTION_I",
+       name: "Health Potion I",
+       kind: "consumable",
+       tier: 1
+     },
+     EN_TONIC_I: {
+       id: "EN_TONIC_I",
+       name: "Energy Tonic I",
+       kind: "consumable",
+       tier: 1
+     },
 
      // Weapons (starter examples)
      RUSTY_SWORD: {
@@ -1242,7 +1260,9 @@
          
            const lootTier = currentArea.lootTier ?? 1;
            const { consumables, gearUpToTier } = getLootPoolsForTier(lootTier);
-         
+
+
+          
            // Chance to drop gear increases with loot tier
            // (tier 1: 25%, tier 2: 40%, tier 3: 55%, tier 4+: 65%)
            const gearChance = Math.min(0.25 + (lootTier - 1) * 0.15, 0.65);
@@ -1253,7 +1273,8 @@
            } else {
              drop = pickOne(rng, consumables);
            }
-         
+
+           const rarity = rollRarity(rng, lootTier);
            addItem(drop.id, 1);
            log.textContent += `\nYou found: ${drop.name} x1`;
          
@@ -1372,6 +1393,33 @@
      });
    }
 
+   function getItemWithRarity(item, rarityKey) {
+     const rarity = RARITIES[rarityKey] || RARITIES.COMMON;
+   
+     if (!item.stats) return item;
+   
+     const scaledStats = {};
+     for (const [k, v] of Object.entries(item.stats)) {
+       scaledStats[k] = Math.round(v * rarity.mult);
+     }
+   
+     return {
+       ...item,
+       rarity: rarityKey,
+       stats: scaledStats
+     };
+   }
+
+   function rollRarity(rng, lootTier) {
+     const roll = rng();
+   
+     if (lootTier >= 4 && roll < 0.02) return "MYTHIC";
+     if (lootTier >= 3 && roll < 0.07) return "LEGENDARY";
+     if (lootTier >= 2 && roll < 0.18) return "RARE";
+     if (roll < 0.45) return "UNCOMMON";
+   
+     return "COMMON";
+   }
 
    
   // ─────────────────────────────────────────────
