@@ -1661,13 +1661,16 @@ function renderInventory() {
    }).join("");
     : `<div class="placeholder">(Your bag is empty. Go beat up something adorable.)</div>`;
 
-  invPanel.innerHTML = `
-    <div class="inv-header">
-      <div class="hint">Items you've collected (saved to browser)</div>
-      <div class="inv-gil">GIL: ${character.gil ?? 0}</div>
-    </div>
-    <div class="inv-list">${rowsHtml}</div>
-  `;
+   invPanel.innerHTML = `
+     <div class="inv-header">
+       <div class="hint">Inventory</div>
+       <div class="inv-gil">GIL: ${character.gil ?? 0}</div>
+     </div>
+   
+     <div class="inv-list">
+       ${rows || `<div class="hint">(empty)</div>`}
+     </div>
+   `;
 
   // One-time event delegation for Equip/Unequip
   if (invPanel.dataset.bound !== '1') {
